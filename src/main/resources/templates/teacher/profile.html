@@ -1,57 +1,108 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html data-role="teacher" data-theme="light" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Teacher Profile | Smart Schedule Assist</title>
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <link rel="stylesheet" th:href="@{/css/responsive.css}">
 </head>
 <body>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <div class="app-layout">
     <aside class="sidebar" th:replace="~{fragments/sidebar :: sidebar('profile')}"></aside>
+    
     <main class="main-content">
-        <header class="header" th:replace="~{fragments/header :: header('Teacher Profile')}"></header>
+        <div class="content-wrapper">
+            <header class="header" th:replace="~{fragments/header :: header('Teacher Profile')}"></header>
 
-        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
-        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
-
-        <div class="card profile-card" style="max-width: 650px;">
-            <div class="card-header flex-between flex-center">
-                <span class="card-title">👨‍🏫 Faculty Profile</span>
-                <a th:href="@{/teacher/change-password}" class="btn btn-secondary btn-sm">🔑 Change Password</a>
+            <div th:if="${successMessage}" class="alert alert-success">
+                <div class="alert-icon">✓</div>
+                <div class="alert-content" th:text="${successMessage}"></div>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-error">
+                <div class="alert-icon">⚠️</div>
+                <div class="alert-content" th:text="${errorMessage}"></div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px;">
-                <div class="profile-field">
-                    <div class="profile-label">Teacher / Employee ID</div>
-                    <div class="profile-value" th:text="${teacher.teacherId}">T001</div>
+            <div class="page-header">
+                <h1 class="page-title">My Profile</h1>
+            </div>
+
+            <div class="card profile-card" style="max-width: 650px;">
+                <div class="card-header flex-between flex-center">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div class="profile-avatar" style="width: 64px; height: 64px; border-radius: 50%; background: var(--role-primary-soft); color: var(--role-primary); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700;">
+                            <span th:text="${#strings.substring(teacher.user.fullName, 0, 1)}">T</span>
+                        </div>
+                        <div>
+                            <h2 style="font-size: 20px; font-weight: 700; color: var(--text);" th:text="${teacher.user.fullName}">Prof. Name</h2>
+                            <div class="badge badge-active mt-4">Active Faculty</div>
+                        </div>
+                    </div>
+                    <a th:href="@{/teacher/change-password}" class="btn btn-secondary btn-sm">🔑 Change Password</a>
                 </div>
-                <div class="profile-field">
-                    <div class="profile-label">Full Name</div>
-                    <div class="profile-value" th:text="${teacher.user.fullName}">Prof. Name</div>
-                </div>
-                <div class="profile-field">
-                    <div class="profile-label">Email Address</div>
-                    <div class="profile-value" th:text="${teacher.user.email != null ? teacher.user.email : 'N/A'}">email@smartschedule.edu</div>
-                </div>
-                <div class="profile-field">
-                    <div class="profile-label">Phone Number</div>
-                    <div class="profile-value" th:text="${teacher.phone != null ? teacher.phone : 'N/A'}">9876543210</div>
-                </div>
-                <div class="profile-field" style="grid-column: 1 / -1;">
-                    <div class="profile-label">Associated Departments</div>
-                    <div class="profile-value" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
-                        <span th:each="d : ${teacher.departments}" class="badge badge-published" th:text="${d.name + ' (' + d.code + ')'}">CSE</span>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);">
+                    <div class="profile-field">
+                        <div class="profile-label" style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Teacher / Employee ID</div>
+                        <div class="profile-value" style="font-size: 15px; color: var(--text); font-weight: 500;" th:text="${teacher.teacherId}">T001</div>
+                    </div>
+                    <div class="profile-field">
+                        <div class="profile-label" style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Email Address</div>
+                        <div class="profile-value" style="font-size: 15px; color: var(--text); font-weight: 500;" th:text="${teacher.user.email != null ? teacher.user.email : 'N/A'}">email@smartschedule.edu</div>
+                    </div>
+                    <div class="profile-field">
+                        <div class="profile-label" style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Phone Number</div>
+                        <div class="profile-value" style="font-size: 15px; color: var(--text); font-weight: 500;" th:text="${teacher.phone != null ? teacher.phone : 'N/A'}">9876543210</div>
+                    </div>
+                    <div class="profile-field" style="grid-column: 1 / -1;">
+                        <div class="profile-label" style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600;">Associated Departments</div>
+                        <div class="profile-value" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <span th:each="d : ${teacher.departments}" class="badge badge-published" th:text="${d.name + ' (' + d.code + ')'}">CSE</span>
+                        </div>
                     </div>
                 </div>
-                <div class="profile-field">
-                    <div class="profile-label">Account Status</div>
-                    <div class="profile-value"><span class="badge badge-active">Active Faculty</span></div>
-                </div>
             </div>
+
         </div>
     </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a th:href="@{/teacher/dashboard}" class="bottom-nav-item">
+            <div class="bottom-nav-icon">
+                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            </div>
+            <span>Home</span>
+        </a>
+        <a th:href="@{/teacher/timetable}" class="bottom-nav-item">
+            <div class="bottom-nav-icon">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </div>
+            <span>Schedule</span>
+        </a>
+        <a th:href="@{/teacher/absence}" class="bottom-nav-item">
+            <div class="bottom-nav-icon">
+                <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            </div>
+            <span>Leaves</span>
+        </a>
+        <a th:href="@{/teacher/notifications}" class="bottom-nav-item">
+            <div class="bottom-nav-icon">
+                <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            </div>
+            <span>Alerts</span>
+        </a>
+        <a th:href="@{/teacher/profile}" class="bottom-nav-item active">
+            <div class="bottom-nav-icon">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <span>Profile</span>
+        </a>
+    </nav>
 </div>
 
 <script th:src="@{/js/app.js}"></script>

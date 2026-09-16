@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html data-role="student" data-theme="light" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard | Smart Schedule Assist</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <link rel="stylesheet" th:href="@{/css/responsive.css}">
     <link rel="stylesheet" th:href="@{/css/print.css}" media="print">
@@ -14,118 +16,200 @@
     <main class="main-content">
         <header class="header" th:replace="~{fragments/header :: header('Student Dashboard')}"></header>
 
-        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
-        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+        <div style="padding: 24px; max-width: 1200px; margin: 0 auto;">
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}" style="margin-bottom: 24px; padding: 16px; border-radius: 12px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0;"></div>
+            <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}" style="margin-bottom: 24px; padding: 16px; border-radius: 12px; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;"></div>
 
-        <!-- Student Profile Overview Card -->
-        <div class="card mb-24">
-            <div class="flex-between flex-center">
-                <div>
-                    <h2 style="font-size: 22px; font-weight: 700; color: var(--primary);" th:text="${student.user.fullName}">Student Name</h2>
-                    <p class="text-muted" style="margin-top: 4px;">
-                        Roll No: <strong th:text="${student.studentId}">S001</strong> |
-                        Dept: <strong th:text="${student.department != null ? student.department.name : 'N/A'}">CSE</strong> |
-                        Year: <strong th:text="${student.academicYear != null ? student.academicYear.label : 'N/A'}">2nd Year</strong> |
-                        Section: <strong th:text="${student.section != null ? student.section.displayName : 'N/A'}">CSE-A</strong> |
-                        Semester: <strong th:text="${student.semester}">3</strong>
-                    </p>
-                </div>
-                <div>
-                    <a th:href="@{/student/timetable/pdf}" class="btn btn-secondary btn-sm">📄 Download PDF</a>
-                    <a th:href="@{/student/timetable}" class="btn btn-primary btn-sm">Full Timetable →</a>
+            <!-- Student Profile Overview Card -->
+            <div class="card mb-24" style="padding: 24px;">
+                <div class="flex-between flex-center" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <h2 style="font-size: 24px; font-weight: 700; color: var(--primary); margin: 0 0 8px 0;" th:text="${student.user.fullName}">Student Name</h2>
+                        <div class="text-muted" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; font-size: 14px;">
+                            <span style="background: #f1f5f9; padding: 4px 12px; border-radius: 99px;">ID: <strong th:text="${student.studentId}">S001</strong></span>
+                            <span style="background: #f1f5f9; padding: 4px 12px; border-radius: 99px;">Dept: <strong th:text="${student.department != null ? student.department.name : 'N/A'}">CSE</strong></span>
+                            <span style="background: #f1f5f9; padding: 4px 12px; border-radius: 99px;">Year: <strong th:text="${student.academicYear != null ? student.academicYear.label : 'N/A'}">2nd Year</strong></span>
+                            <span style="background: #f1f5f9; padding: 4px 12px; border-radius: 99px;">Sec: <strong th:text="${student.section != null ? student.section.displayName : 'N/A'}">CSE-A</strong></span>
+                            <span style="background: #f1f5f9; padding: 4px 12px; border-radius: 99px;">Sem: <strong th:text="${student.semester}">3</strong></span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <a th:href="@{/student/timetable/pdf}" class="btn btn-secondary" style="padding: 10px 16px; border-radius: 99px; background: white; border: 1px solid #e2e8f0; color: #0f172a; text-decoration: none; font-weight: 500;">📄 PDF</a>
+                        <a th:href="@{/student/timetable}" class="btn btn-primary" style="padding: 10px 20px; border-radius: 99px; text-decoration: none; font-weight: 600;">Full Timetable →</a>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Next Class Prominent Card -->
-        <div class="card next-class-card mb-24">
-            <div class="card-header">
-                <span class="card-title">⏰ Next Upcoming Class</span>
-                <span class="badge badge-active" th:if="${nextClass != null}">Upcoming</span>
-            </div>
-            <div th:if="${nextClass != null}">
-                <div class="next-class-subject" th:text="${nextClass.subject != null ? nextClass.subject.name + ' (' + nextClass.subject.code + ')' : 'Free Period'}">Subject Name</div>
-                <div class="next-class-time mt-8">
-                    <span>🕒 Period </span><span th:text="${nextClass.period.periodNumber}">1</span>:
-                    <span th:text="${#temporals.format(nextClass.period.startTime, 'hh:mm a')}">09:00 AM</span> -
-                    <span th:text="${#temporals.format(nextClass.period.endTime, 'hh:mm a')}">09:50 AM</span>
-                    <span class="badge badge-substitute" th:if="${nextClass.status.name() == 'SUBSTITUTE'}">Substitute Teacher</span>
+            <!-- Next Class Prominent Card -->
+            <div class="card next-class-card mb-24" style="background: linear-gradient(135deg, var(--role-primary), #0284c7); color: white; padding: 32px; position: relative; overflow: hidden;">
+                <svg style="position: absolute; right: -20px; top: -20px; width: 160px; height: 160px; opacity: 0.1;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <span class="card-title" style="font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9;">⏰ Up Next</span>
+                    <span class="badge badge-active" th:if="${nextClass != null}" style="background: rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 99px; font-weight: 600; font-size: 12px;">Upcoming</span>
                 </div>
-                <div class="next-class-info mt-8">
-                    <span>👨‍🏫 Teacher: </span>
-                    <strong th:text="${nextClass.status.name() == 'SUBSTITUTE' && nextClass.substituteTeacher != null ? nextClass.substituteTeacher.user.fullName + ' (Sub)' : (nextClass.teacher != null ? nextClass.teacher.user.fullName : 'N/A')}">Teacher Name</strong>
-                    <span style="margin: 0 8px;">|</span>
-                    <span>📍 Classroom: </span>
-                    <strong th:text="${nextClass.classroom != null ? nextClass.classroom.name : 'N/A'}">Room 101</strong>
+                
+                <div th:if="${nextClass != null}" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 24px;">
+                    <div>
+                        <div class="next-class-subject" th:text="${nextClass.subject != null ? nextClass.subject.name + ' (' + nextClass.subject.code + ')' : 'Free Period'}" style="font-size: 32px; font-weight: 800; line-height: 1.2; margin-bottom: 12px;">Subject Name</div>
+                        
+                        <div class="next-class-info" style="display: flex; gap: 24px; flex-wrap: wrap; opacity: 0.9; font-size: 15px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                <span>Period <span th:text="${nextClass.period.periodNumber}">1</span>: <span th:text="${#temporals.format(nextClass.period.startTime, 'hh:mm a')}">09:00 AM</span> - <span th:text="${#temporals.format(nextClass.period.endTime, 'hh:mm a')}">09:50 AM</span></span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                <strong th:text="${nextClass.status.name() == 'SUBSTITUTE' && nextClass.substituteTeacher != null ? nextClass.substituteTeacher.user.fullName + ' (Sub)' : (nextClass.teacher != null ? nextClass.teacher.user.fullName : 'N/A')}">Teacher Name</strong>
+                                <span th:if="${nextClass.status.name() == 'SUBSTITUTE'}" style="background: #f59e0b; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px;">SUB</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <strong th:text="${nextClass.classroom != null ? nextClass.classroom.name : 'N/A'}">Room 101</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(0,0,0,0.15); padding: 16px 24px; border-radius: 16px; text-align: center; backdrop-filter: blur(4px);">
+                        <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; opacity: 0.8;">Starts in</div>
+                        <div class="countdown-timer" id="classCountdown" th:attr="data-target=${nextClass != null ? #temporals.format(nextClass.period.startTime, 'HH:mm') : ''}" style="font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums;">--:--</div>
+                    </div>
+                </div>
+                <div th:if="${nextClass == null}" style="padding: 24px 0;">
+                    <p style="font-size: 20px; font-weight: 500;">🎉 No more classes today! Enjoy your day.</p>
                 </div>
             </div>
-            <div th:if="${nextClass == null}" class="text-muted" style="padding: 12px 0;">
-                <p>🎉 No more classes scheduled for today! Enjoy your day.</p>
-            </div>
-        </div>
 
-        <!-- Today's Full Schedule Table -->
-        <div class="card mb-24">
-            <div class="card-header flex-between flex-center">
-                <span class="card-title">📅 Today's Schedule (<span th:text="${#strings.capitalize(#strings.toLowerCase(currentDay))}">Monday</span>)</span>
-                <a th:href="@{/student/timetable/pdf/today}" class="btn btn-secondary btn-sm">Download Today's PDF</a>
+            <!-- Today's Full Schedule Timeline -->
+            <div class="card mb-24" style="padding: 24px;">
+                <div class="card-header flex-between flex-center" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+                    <h3 style="margin: 0; font-size: 20px; font-weight: 700;">📅 Today's Schedule (<span th:text="${#strings.capitalize(#strings.toLowerCase(currentDay))}">Monday</span>)</h3>
+                    <a th:href="@{/student/timetable/pdf/today}" class="btn btn-secondary btn-sm" style="padding: 8px 16px; border-radius: 99px; font-size: 14px; text-decoration: none; color: #475569; background: #f1f5f9;">Download Today</a>
+                </div>
+                
+                <div class="timeline" style="position: relative; padding-left: 12px;">
+                    <div th:each="period, iterStat : ${allPeriods}" class="timeline-item" th:classappend="${iterStat.index == 2 ? 'active' : ''}" style="display: flex; gap: 24px; margin-bottom: 24px; position: relative;">
+                        
+                        <!-- Time -->
+                        <div class="timeline-time" style="width: 80px; text-align: right; flex-shrink: 0; padding-top: 4px;">
+                            <div style="font-weight: 700; color: var(--text); font-size: 14px;" th:text="${#temporals.format(period.startTime, 'hh:mm')}">09:00</div>
+                            <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;" th:text="${#temporals.format(period.startTime, 'a')}">AM</div>
+                        </div>
+                        
+                        <!-- Connector -->
+                        <div class="timeline-connector" style="position: relative; width: 24px; display: flex; justify-content: center; flex-shrink: 0;">
+                            <div style="position: absolute; top: 8px; bottom: -32px; width: 2px; background: #e2e8f0; z-index: 1;" th:styleappend="${iterStat.last ? 'display:none;' : ''}"></div>
+                            <div style="width: 16px; height: 16px; border-radius: 50%; background: white; border: 3px solid #e2e8f0; position: relative; z-index: 2; margin-top: 4px; box-shadow: 0 0 0 4px white;" th:styleappend="${iterStat.index == 2 ? 'border-color: var(--primary); background: var(--primary);' : ''}"></div>
+                        </div>
+                        
+                        <!-- Card Content -->
+                        <div class="timeline-card" style="flex: 1; min-width: 0;">
+                            
+                            <!-- BREAK / LUNCH -->
+                            <div th:if="${period.type.name() == 'BREAK'}" class="break-card" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 24px;">☕</span>
+                                <div>
+                                    <div style="font-weight: 600; color: #475569;">Short Break</div>
+                                    <div style="font-size: 13px; color: #94a3b8;" th:text="${#temporals.format(period.startTime, 'hh:mm a') + ' - ' + #temporals.format(period.endTime, 'hh:mm a')}">10:40 - 11:00</div>
+                                </div>
+                            </div>
+                            
+                            <div th:if="${period.type.name() == 'LUNCH'}" class="break-card" style="background: #fff7ed; border: 1px dashed #fdba74; border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 24px;">🍱</span>
+                                <div>
+                                    <div style="font-weight: 600; color: #ea580c;">Lunch Break</div>
+                                    <div style="font-size: 13px; color: #f97316;" th:text="${#temporals.format(period.startTime, 'hh:mm a') + ' - ' + #temporals.format(period.endTime, 'hh:mm a')}">12:40 - 13:30</div>
+                                </div>
+                            </div>
+                            
+                            <!-- REGULAR CLASS -->
+                            <div th:if="${period.type.name() == 'CLASS'}" th:with="matchingEntries=${todayEntries.?[period.id == #root.period.id]}">
+                                
+                                <!-- Active Class -->
+                                <div th:if="${!matchingEntries.isEmpty() && matchingEntries[0].subject != null}" 
+                                     th:class="${matchingEntries[0].status.name() == 'CANCELLED'} ? 'cancelled-card' : ''"
+                                     style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; transition: 0.2s;"
+                                     th:styleappend="${iterStat.index == 2 ? 'border-color: var(--primary); box-shadow: 0 4px 12px rgba(20, 184, 166, 0.15);' : (matchingEntries[0].status.name() == 'CANCELLED' ? 'background: #fef2f2; border-color: #fecaca; opacity: 0.8;' : '')}">
+                                    
+                                    <div>
+                                        <div style="font-size: 12px; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;" th:text="${'Period ' + period.periodNumber + ' • ' + #temporals.format(period.endTime, 'hh:mm a')}">Period 1 • 09:50 AM</div>
+                                        
+                                        <h4 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 700; color: var(--text);" th:styleappend="${matchingEntries[0].status.name() == 'CANCELLED' ? 'text-decoration: line-through; color: #ef4444;' : ''}">
+                                            <span th:text="${matchingEntries[0].subject.name}">Data Structures</span>
+                                            <span style="font-size: 14px; font-weight: 500; color: var(--text-muted); margin-left: 8px;" th:text="${matchingEntries[0].subject.code}">CS201</span>
+                                        </h4>
+                                        
+                                        <div style="display: flex; gap: 16px; font-size: 14px; color: var(--text-muted); align-items: center;">
+                                            <div style="display: flex; align-items: center; gap: 6px;">
+                                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                                <span th:if="${matchingEntries[0].status.name() == 'SUBSTITUTE' && matchingEntries[0].substituteTeacher != null}" style="color: #f59e0b; font-weight: 600;" th:text="${matchingEntries[0].substituteTeacher.user.fullName + ' (Sub)'}">Sub Teacher</span>
+                                                <span th:if="${matchingEntries[0].status.name() != 'SUBSTITUTE' && matchingEntries[0].teacher != null}" th:text="${matchingEntries[0].teacher.user.fullName}">Prof. Name</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 6px;" th:if="${matchingEntries[0].classroom != null}">
+                                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                                <span th:text="${matchingEntries[0].classroom.name}">Room 101</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="display: flex; align-items: flex-start;">
+                                        <span th:if="${matchingEntries[0].status.name() == 'ACTIVE'}" class="badge badge-active" style="background: #f0fdf4; color: #16a34a; padding: 6px 12px; border-radius: 99px; font-size: 12px; font-weight: 600; border: 1px solid #bbf7d0;">Scheduled</span>
+                                        <span th:if="${matchingEntries[0].status.name() == 'SUBSTITUTE'}" class="badge badge-substitute" style="background: #fffbeb; color: #d97706; padding: 6px 12px; border-radius: 99px; font-size: 12px; font-weight: 600; border: 1px solid #fde68a;">Substitute</span>
+                                        <span th:if="${matchingEntries[0].status.name() == 'CANCELLED'}" class="badge badge-rejected" style="background: #fef2f2; color: #dc2626; padding: 6px 12px; border-radius: 99px; font-size: 12px; font-weight: 600; border: 1px solid #fecaca;">CANCELLED</span>
+                                    </div>
+                                    
+                                </div>
+                                
+                                <!-- Free Period -->
+                                <div th:if="${matchingEntries.isEmpty() || matchingEntries[0].subject == null}" style="background: #f8fafc; border: 1px dashed #e2e8f0; border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; opacity: 0.7;">
+                                    <div>
+                                        <div style="font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;" th:text="${'Period ' + period.periodNumber}">Period X</div>
+                                        <div style="font-size: 16px; font-weight: 500; color: #64748b; font-style: italic;">Free Period</div>
+                                    </div>
+                                    <span class="badge badge-free" style="background: #f1f5f9; color: #64748b; padding: 6px 12px; border-radius: 99px; font-size: 12px; font-weight: 600;">Free</span>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div style="overflow-x: auto; margin-top: 12px;">
-                <table class="data-table">
-                    <thead>
-                    <tr>
-                        <th style="width: 15%;">Period & Time</th>
-                        <th style="width: 35%;">Subject / Activity</th>
-                        <th style="width: 25%;">Teacher</th>
-                        <th style="width: 15%;">Classroom</th>
-                        <th style="width: 10%;">Status</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="period : ${allPeriods}">
-                        <td>
-                            <strong th:text="${'Period ' + period.periodNumber}">Period 1</strong><br>
-                            <span class="text-muted" style="font-size: 12px;" th:text="${#temporals.format(period.startTime, 'hh:mm a') + ' - ' + #temporals.format(period.endTime, 'hh:mm a')}">09:00 - 09:50</span>
-                        </td>
-                        <td th:if="${period.type.name() == 'BREAK'}" colspan="4" style="background-color: #f1f3f4; text-align: center; color: var(--text-secondary); font-style: italic;">
-                            ☕ Short Break
-                        </td>
-                        <td th:if="${period.type.name() == 'LUNCH'}" colspan="4" style="background-color: #fff3e0; text-align: center; color: var(--warning); font-weight: 600;">
-                            🍱 Lunch Break
-                        </td>
-                        <td th:if="${period.type.name() == 'CLASS'}" th:with="matchingEntries=${todayEntries.?[period.id == #root.period.id]}">
-                            <div th:if="${!matchingEntries.isEmpty() && matchingEntries[0].subject != null}">
-                                <strong th:text="${matchingEntries[0].subject.name}">Data Structures</strong><br>
-                                <span class="text-muted" style="font-size: 12px;" th:text="${matchingEntries[0].subject.code + ' (' + matchingEntries[0].subject.type + ')'}">CS201 (THEORY)</span>
-                            </div>
-                            <div th:if="${matchingEntries.isEmpty() || matchingEntries[0].subject == null}">
-                                <span class="text-muted" style="font-style: italic;">FREE PERIOD</span>
-                            </div>
-                        </td>
-                        <td th:if="${period.type.name() == 'CLASS'}" th:with="matchingEntries=${todayEntries.?[period.id == #root.period.id]}">
-                            <div th:if="${!matchingEntries.isEmpty() && matchingEntries[0].subject != null}">
-                                <span th:if="${matchingEntries[0].status.name() == 'SUBSTITUTE' && matchingEntries[0].substituteTeacher != null}" style="color: var(--warning); font-weight: 600;" th:text="${matchingEntries[0].substituteTeacher.user.fullName + ' (Substitute)'}">Sub Teacher</span>
-                                <span th:if="${matchingEntries[0].status.name() != 'SUBSTITUTE' && matchingEntries[0].teacher != null}" th:text="${matchingEntries[0].teacher.user.fullName}">Prof. Name</span>
-                            </div>
-                            <span th:if="${matchingEntries.isEmpty() || matchingEntries[0].subject == null}">-</span>
-                        </td>
-                        <td th:if="${period.type.name() == 'CLASS'}" th:with="matchingEntries=${todayEntries.?[period.id == #root.period.id]}">
-                            <span th:if="${!matchingEntries.isEmpty() && matchingEntries[0].classroom != null}" th:text="${matchingEntries[0].classroom.name}">Room 101</span>
-                            <span th:if="${matchingEntries.isEmpty() || matchingEntries[0].classroom == null}">-</span>
-                        </td>
-                        <td th:if="${period.type.name() == 'CLASS'}" th:with="matchingEntries=${todayEntries.?[period.id == #root.period.id]}">
-                            <span th:if="${!matchingEntries.isEmpty() && matchingEntries[0].status.name() == 'ACTIVE' && matchingEntries[0].subject != null}" class="badge badge-active">Scheduled</span>
-                            <span th:if="${!matchingEntries.isEmpty() && matchingEntries[0].status.name() == 'SUBSTITUTE'}" class="badge badge-substitute">Substitute</span>
-                            <span th:if="${!matchingEntries.isEmpty() && matchingEntries[0].status.name() == 'CANCELLED'}" class="badge badge-rejected">CANCELLED</span>
-                            <span th:if="${matchingEntries.isEmpty() || matchingEntries[0].subject == null}" class="badge badge-free">Free</span>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
+            
         </div>
     </main>
 </div>
+
+<div class="sidebar-overlay" onclick="closeSidebarMobile()" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 30; backdrop-filter: blur(2px);"></div>
+
+<div class="bottom-nav" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e2e8f0; padding-bottom: env(safe-area-inset-bottom); z-index: 40; box-shadow: 0 -4px 12px rgba(0,0,0,0.05);">
+  <div style="display: flex; justify-content: space-around; padding: 8px 0;">
+      <a th:href="@{/student/dashboard}" class="bottom-nav-item active" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: var(--primary); flex: 1;">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span style="font-size: 11px; font-weight: 600;">Home</span>
+      </a>
+      <a th:href="@{/student/timetable}" class="bottom-nav-item" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: var(--text-muted); flex: 1;">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span style="font-size: 11px; font-weight: 500;">Timetable</span>
+      </a>
+      <a th:href="@{/student/notifications}" class="bottom-nav-item" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: var(--text-muted); flex: 1;">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span style="font-size: 11px; font-weight: 500;">Alerts</span>
+      </a>
+      <a th:href="@{/student/announcements}" class="bottom-nav-item" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: var(--text-muted); flex: 1;">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        <span style="font-size: 11px; font-weight: 500;">More</span>
+      </a>
+  </div>
+</div>
+
+<style>
+  @media (max-width: 768px) {
+    .bottom-nav { display: block !important; }
+    .sidebar { transform: translateX(-100%); position: fixed; z-index: 50; transition: 0.3s; }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay.open { display: block !important; }
+  }
+</style>
 
 <script th:src="@{/js/app.js}"></script>
 <script th:src="@{/js/notifications.js}"></script>

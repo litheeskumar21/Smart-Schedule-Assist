@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" data-role="admin" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,50 +12,60 @@
     <aside class="sidebar" th:replace="~{fragments/sidebar :: sidebar('announcements')}"></aside>
     <main class="main-content">
         <header class="header" th:replace="~{fragments/header :: header('Announcements Management')}"></header>
+        <div class="content-wrapper">
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
 
-        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
-        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
-
-        <div class="flex-between flex-center mb-20">
-            <h1 class="page-title" style="margin-bottom: 0;">Published Announcements (<span th:text="${announcements.size()}">0</span>)</h1>
-            <a th:href="@{/admin/announcements/create}" class="btn btn-primary btn-sm">➕ Create New Announcement</a>
-        </div>
-
-        <div class="card">
-            <div class="empty-state" th:if="${announcements.isEmpty()}">
-                <div class="empty-icon">📢</div>
-                <div class="empty-text">No announcements published yet.</div>
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1 class="page-title">Published Announcements (<span th:text="${announcements.size()}">0</span>)</h1>
+                </div>
+                <div class="page-header-actions">
+                    <div class="search-wrap" style="margin-right: 12px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" class="form-control search-input" placeholder="Search announcements...">
+                    </div>
+                    <a th:href="@{/admin/announcements/create}" class="btn btn-primary">➕ Create New Announcement</a>
+                </div>
             </div>
 
-            <div style="overflow-x: auto;" th:if="${!announcements.isEmpty()}">
-                <table class="data-table">
-                    <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Target Audience</th>
-                        <th>Published Date</th>
-                        <th>Created By</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="a : ${announcements}">
-                        <td><strong th:text="${a.title}">Title</strong></td>
-                        <td><span class="badge badge-published" th:text="${a.targetType}">EVERYONE</span></td>
-                        <td class="text-muted" style="font-size: 12px;" th:text="${#temporals.format(a.publishedAt != null ? a.publishedAt : a.createdAt, 'MMM dd, yyyy HH:mm')}">Date</td>
-                        <td th:text="${a.createdBy != null ? a.createdBy.fullName : 'Admin'}">Admin</td>
-                        <td>
-                            <div class="table-actions">
-                                <a th:href="@{'/admin/announcements/edit/' + ${a.id}}" class="btn btn-secondary btn-sm">Edit</a>
-                                <form th:action="@{'/admin/announcements/delete/' + ${a.id}}" method="post" style="display: inline;" onsubmit="return confirm('Delete this announcement?');">
-                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+            <div class="card">
+                <div class="empty-state" th:if="${announcements.isEmpty()}">
+                    <div class="empty-icon" style="font-size: 48px; margin-bottom: 16px;">📢</div>
+                    <h3>No Announcements</h3>
+                    <div class="empty-text">No announcements published yet.</div>
+                </div>
+
+                <div style="overflow-x: auto;" th:if="${!announcements.isEmpty()}">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Target Audience</th>
+                            <th>Published Date</th>
+                            <th>Created By</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="a : ${announcements}">
+                            <td><strong style="color: var(--primary);" th:text="${a.title}">Title</strong></td>
+                            <td><span class="badge badge-published" th:text="${a.targetType}">EVERYONE</span></td>
+                            <td class="text-muted" style="font-size: 12px;" th:text="${#temporals.format(a.publishedAt != null ? a.publishedAt : a.createdAt, 'MMM dd, yyyy HH:mm')}">Date</td>
+                            <td th:text="${a.createdBy != null ? a.createdBy.fullName : 'Admin'}">Admin</td>
+                            <td>
+                                <div class="table-actions">
+                                    <a th:href="@{'/admin/announcements/edit/' + ${a.id}}" class="btn btn-secondary btn-sm">Edit</a>
+                                    <form th:action="@{'/admin/announcements/delete/' + ${a.id}}" method="post" style="display: inline;" onsubmit="return confirm('Delete this announcement?');">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </main>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html data-role="admin" data-theme="light" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,87 +13,85 @@
     <main class="main-content">
         <header class="header" th:replace="~{fragments/header :: header(${isEdit ? 'Edit Student' : 'Add Student'})}"></header>
 
-        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+        <div class="content-wrapper">
+            <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
 
-        <div class="card" style="max-width: 700px;">
-            <div class="card-header">
-                <span class="card-title" th:text="${isEdit ? '✏️ Edit Student Account' : '➕ Create New Student Account'}">Student Form</span>
+            <div class="card" style="max-width: 700px;">
+                <div class="card-header">
+                    <span class="card-title" th:text="${isEdit ? '✏️ Edit Student Account' : '➕ Create New Student Account'}">Student Form</span>
+                </div>
+
+                <form th:action="${isEdit} ? @{'/admin/students/edit/' + ${student.id}} : @{/admin/students/create}" method="post" style="margin-top: 16px;">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Student ID / Roll No *</label>
+                            <input type="text" name="studentId" class="form-control" required placeholder="e.g., S031"
+                                   th:value="${student.studentId}" th:readonly="${isEdit}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Full Name *</label>
+                            <input type="text" name="fullName" class="form-control" required placeholder="e.g., Alex Johnson"
+                                   th:value="${student.user != null ? student.user.fullName : ''}">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" name="email" class="form-control" placeholder="e.g., s031@smartschedule.edu"
+                                   th:value="${student.user != null ? student.user.email : ''}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" th:text="${isEdit ? 'Password (leave blank to keep unchanged)' : 'Initial Password *'}">Password</label>
+                            <input type="password" name="password" class="form-control" th:required="${!isEdit}" placeholder="Default: student123">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Department *</label>
+                            <select name="departmentId" class="form-control form-select" required>
+                                <option value="">-- Choose Dept --</option>
+                                <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name + ' (' + d.code + ')'}"
+                                        th:selected="${student.department != null && student.department.id == d.id}">CSE</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Academic Year *</label>
+                            <select name="academicYearId" class="form-control form-select" required>
+                                <option value="">-- Choose Year --</option>
+                                <option th:each="y : ${years}" th:value="${y.id}" th:text="${y.label}"
+                                        th:selected="${student.academicYear != null && student.academicYear.id == y.id}">2nd Year</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Assigned Section *</label>
+                            <select name="sectionId" class="form-control form-select" required>
+                                <option value="">-- Choose Section --</option>
+                                <option th:each="sec : ${sections}" th:value="${sec.id}" th:text="${sec.displayName}"
+                                        th:selected="${student.section != null && student.section.id == sec.id}">CSE-A</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Current Semester *</label>
+                            <input type="number" name="semester" class="form-control" min="1" max="8" required
+                                   th:value="${student.semester != 0 ? student.semester : 3}">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; margin-top: 24px;">
+                        <button type="submit" class="btn btn-primary" th:text="${isEdit ? 'Update Student' : 'Save Student'}">Save Student</button>
+                        <a th:href="@{/admin/students}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
             </div>
-
-            <form th:action="${isEdit} ? @{'/admin/students/edit/' + ${student.id}} : @{/admin/students/create}" method="post" style="margin-top: 16px;">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Student ID / Roll No *</label>
-                        <input type="text" name="studentId" class="form-control" required placeholder="e.g., S031"
-                               th:value="${student.studentId}" th:readonly="${isEdit}">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Full Name *</label>
-                        <input type="text" name="fullName" class="form-control" required placeholder="e.g., Alex Johnson"
-                               th:value="${student.user != null ? student.user.fullName : ''}">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" name="email" class="form-control" placeholder="e.g., s031@smartschedule.edu"
-                               th:value="${student.user != null ? student.user.email : ''}">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" th:text="${isEdit ? 'Password (leave blank to keep unchanged)' : 'Initial Password *'}">Password</label>
-                        <input type="password" name="password" class="form-control" th:required="${!isEdit}" placeholder="Default: student123">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Department *</label>
-                        <select name="departmentId" class="form-control form-select" required>
-                            <option value="">-- Choose Dept --</option>
-                            <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name + ' (' + d.code + ')'}"
-                                    th:selected="${student.department != null && student.department.id == d.id}">CSE</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Academic Year *</label>
-                        <select name="academicYearId" class="form-control form-select" required>
-                            <option value="">-- Choose Year --</option>
-                            <option th:each="y : ${years}" th:value="${y.id}" th:text="${y.label}"
-                                    th:selected="${student.academicYear != null && student.academicYear.id == y.id}">2nd Year</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Assigned Section *</label>
-                        <select name="sectionId" class="form-control form-select" required>
-                            <option value="">-- Choose Section --</option>
-                            <option th:each="sec : ${sections}" th:value="${sec.id}" th:text="${sec.displayName}"
-                                    th:selected="${student.section != null && student.section.id == sec.id}">CSE-A</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Current Semester *</label>
-                        <input type="number" name="semester" class="form-control" min="1" max="8" required
-                               th:value="${student.semester != 0 ? student.semester : 3}">
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 12px; margin-top: 24px;">
-                    <button type="submit" class="btn btn-primary" th:text="${isEdit ? 'Update Student' : 'Save Student'}">Save Student</button>
-                    <a th:href="@{/admin/students}" class="btn btn-secondary">Cancel</a>
-                </div>
-            </form>
         </div>
     </main>
 </div>
-
-<script th:src="@{/js/app.js}"></script>
-<script th:src="@{/js/notifications.js}"></script>
-<script th:src="@{/js/mobile.js}"></script>
 </body>
 </html>

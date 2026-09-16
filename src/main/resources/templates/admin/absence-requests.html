@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" data-role="admin" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,57 +12,69 @@
     <aside class="sidebar" th:replace="~{fragments/sidebar :: sidebar('absence-requests')}"></aside>
     <main class="main-content">
         <header class="header" th:replace="~{fragments/header :: header('Absence Requests')}"></header>
+        <div class="content-wrapper">
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
 
-        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
-        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
-
-        <div class="flex-between flex-center mb-20">
-            <h1 class="page-title" style="margin-bottom: 0;">Faculty Absence Requests (<span th:text="${requests.size()}">0</span>)</h1>
-        </div>
-
-        <div class="card">
-            <div class="empty-state" th:if="${requests.isEmpty()}">
-                <div class="empty-icon">📝</div>
-                <div class="empty-text">No faculty absence requests found.</div>
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1 class="page-title">Faculty Absence Requests (<span th:text="${requests.size()}">0</span>)</h1>
+                </div>
+                <div class="page-header-actions">
+                    <div class="search-wrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" class="form-control search-input" placeholder="Search requests...">
+                    </div>
+                </div>
             </div>
 
-            <div style="overflow-x: auto;" th:if="${!requests.isEmpty()}">
-                <table class="data-table">
-                    <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Faculty Member</th>
-                        <th>Absence Date</th>
-                        <th>Scope</th>
-                        <th>Reason</th>
-                        <th>Suggested Sub</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="r : ${requests}">
-                        <td th:text="${r.id}">1</td>
-                        <td>
-                            <strong th:text="${r.teacher.user.fullName}">Prof. Name</strong><br>
-                            <span class="text-muted" style="font-size: 12px;" th:text="${r.teacher.teacherId}">T001</span>
-                        </td>
-                        <td><strong th:text="${#temporals.format(r.absenceDate, 'MMM dd, yyyy (EEEE)')}">Oct 10, 2026</strong></td>
-                        <td th:text="${r.absenceType == T(com.smartschedule.model.enums.AbsenceType).FULL_DAY ? 'Full Day' : 'Specific Periods'}">Full Day</td>
-                        <td th:text="${r.reason}">Medical Leave</td>
-                        <td th:text="${r.suggestedSubstitute != null ? r.suggestedSubstitute.user.fullName : '-'}">-</td>
-                        <td>
-                            <span th:if="${r.status.name() == 'PENDING'}" class="badge badge-pending">Pending Review</span>
-                            <span th:if="${r.status.name() == 'APPROVED'}" class="badge badge-approved">Approved</span>
-                            <span th:if="${r.status.name() == 'REJECTED'}" class="badge badge-rejected">Rejected</span>
-                            <span th:if="${r.status.name() == 'WITHDRAWN'}" class="badge badge-withdrawn">Withdrawn</span>
-                        </td>
-                        <td>
-                            <a th:href="@{'/admin/absence-requests/' + ${r.id}}" class="btn btn-primary btn-sm">View & Manage →</a>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+            <div class="card">
+                <div class="empty-state" th:if="${requests.isEmpty()}">
+                    <div class="empty-icon" style="font-size: 48px; margin-bottom: 16px;">📝</div>
+                    <h3>No Requests Found</h3>
+                    <div class="empty-text">No faculty absence requests found.</div>
+                </div>
+
+                <div style="overflow-x: auto;" th:if="${!requests.isEmpty()}">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Faculty Member</th>
+                            <th>Absence Date</th>
+                            <th>Scope</th>
+                            <th>Reason</th>
+                            <th>Suggested Sub</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="r : ${requests}">
+                            <td th:text="${r.id}">1</td>
+                            <td>
+                                <strong style="color: var(--primary);" th:text="${r.teacher.user.fullName}">Prof. Name</strong><br>
+                                <span class="text-muted" style="font-size: 12px;" th:text="${r.teacher.teacherId}">T001</span>
+                            </td>
+                            <td><strong th:text="${#temporals.format(r.absenceDate, 'MMM dd, yyyy (EEEE)')}">Oct 10, 2026</strong></td>
+                            <td th:text="${r.absenceType == T(com.smartschedule.model.enums.AbsenceType).FULL_DAY ? 'Full Day' : 'Specific Periods'}">Full Day</td>
+                            <td th:text="${r.reason}">Medical Leave</td>
+                            <td th:text="${r.suggestedSubstitute != null ? r.suggestedSubstitute.user.fullName : '-'}">-</td>
+                            <td>
+                                <span th:if="${r.status.name() == 'PENDING'}" class="badge badge-pending">Pending Review</span>
+                                <span th:if="${r.status.name() == 'APPROVED'}" class="badge badge-approved">Approved</span>
+                                <span th:if="${r.status.name() == 'REJECTED'}" class="badge badge-rejected">Rejected</span>
+                                <span th:if="${r.status.name() == 'WITHDRAWN'}" class="badge badge-cancelled">Withdrawn</span>
+                            </td>
+                            <td>
+                                <div class="table-actions">
+                                    <a th:href="@{'/admin/absence-requests/' + ${r.id}}" class="btn btn-primary btn-sm">View & Manage →</a>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </main>

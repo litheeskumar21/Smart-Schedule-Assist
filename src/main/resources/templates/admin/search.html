@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" data-role="admin" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,159 +12,174 @@
     <aside class="sidebar" th:replace="~{fragments/sidebar :: sidebar('dashboard')}"></aside>
     <main class="main-content">
         <header class="header" th:replace="~{fragments/header :: header('Search Results')}"></header>
-
-        <!-- Global Search Bar -->
-        <div class="card mb-24" style="padding: 16px 24px;">
-            <form th:action="@{/admin/search}" method="get" style="display: flex; gap: 12px;">
-                <input type="text" name="q" class="form-control" th:value="${query}" placeholder="🔍 Search students, faculty, courses, rooms, sections..." required style="font-size: 15px;">
-                <button type="submit" class="btn btn-primary" style="white-space: nowrap;">Search Again</button>
-            </form>
-        </div>
-
-        <h2 class="section-title">Search Results for: "<span th:text="${query}">query</span>"</h2>
-
-        <!-- Students Matches -->
-        <div class="card mb-24" th:if="${students != null && !students.isEmpty()}">
-            <div class="card-header">
-                <span class="card-title">🎓 Students (<span th:text="${students.size()}">0</span>)</span>
+        <div class="content-wrapper">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1 class="page-title">Search Results for: "<span th:text="${query}">query</span>"</h1>
+                </div>
             </div>
-            <table class="data-table">
-                <thead>
-                <tr>
-                    <th>Roll No</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Department</th>
-                    <th>Section</th>
-                    <th>Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="s : ${students}">
-                    <td><strong th:text="${s.studentId}">S001</strong></td>
-                    <td th:text="${s.user.fullName}">John Doe</td>
-                    <td th:text="${s.user.email}">email</td>
-                    <td th:text="${s.department != null ? s.department.code : '-'}">CSE</td>
-                    <td th:text="${s.section != null ? s.section.displayName : '-'}">CSE-A</td>
-                    <td><a th:href="@{'/admin/students/edit/' + ${s.id}}" class="btn btn-secondary btn-sm">Edit</a></td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Teachers Matches -->
-        <div class="card mb-24" th:if="${teachers != null && !teachers.isEmpty()}">
-            <div class="card-header">
-                <span class="card-title">👨‍🏫 Faculty (<span th:text="${teachers.size()}">0</span>)</span>
+            <div class="card mb-24">
+                <form th:action="@{/admin/search}" method="get">
+                    <div class="search-wrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" name="q" class="form-control search-input" th:value="${query}" placeholder="Search students, faculty, courses, rooms, sections..." required>
+                        <button type="submit" class="btn btn-primary" style="white-space: nowrap;">Search</button>
+                    </div>
+                </form>
             </div>
-            <table class="data-table">
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="t : ${teachers}">
-                    <td><strong th:text="${t.teacherId}">T001</strong></td>
-                    <td th:text="${t.user.fullName}">Prof. Name</td>
-                    <td th:text="${t.user.email}">email</td>
-                    <td th:text="${t.phone}">phone</td>
-                    <td><a th:href="@{'/admin/teachers/edit/' + ${t.id}}" class="btn btn-secondary btn-sm">Edit</a></td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Subjects Matches -->
-        <div class="card mb-24" th:if="${subjects != null && !subjects.isEmpty()}">
-            <div class="card-header">
-                <span class="card-title">📖 Subjects & Courses (<span th:text="${subjects.size()}">0</span>)</span>
+            <div class="card mb-24" th:if="${students != null && !students.isEmpty()}">
+                <div class="card-header">
+                    <span class="card-title">🎓 Students (<span th:text="${students.size()}">0</span>)</span>
+                </div>
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Roll No</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Department</th>
+                        <th>Section</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="s : ${students}">
+                        <td><strong th:text="${s.studentId}">S001</strong></td>
+                        <td th:text="${s.user.fullName}">John Doe</td>
+                        <td th:text="${s.user.email}">email</td>
+                        <td th:text="${s.department != null ? s.department.code : '-'}">CSE</td>
+                        <td th:text="${s.section != null ? s.section.displayName : '-'}">CSE-A</td>
+                        <td>
+                            <div class="table-actions">
+                                <a th:href="@{'/admin/students/edit/' + ${s.id}}" class="btn btn-primary btn-sm">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
-            <table class="data-table">
-                <thead>
-                <tr>
-                    <th>Code</th>
-                    <th>Subject Name</th>
-                    <th>Type</th>
-                    <th>Department</th>
-                    <th>Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="sub : ${subjects}">
-                    <td><strong th:text="${sub.code}">CS201</strong></td>
-                    <td th:text="${sub.name}">Data Structures</td>
-                    <td><span class="badge badge-published" th:text="${sub.type}">THEORY</span></td>
-                    <td th:text="${sub.department != null ? sub.department.code : '-'}">CSE</td>
-                    <td><a th:href="@{'/admin/subjects/edit/' + ${sub.id}}" class="btn btn-secondary btn-sm">Edit</a></td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Sections Matches -->
-        <div class="card mb-24" th:if="${sections != null && !sections.isEmpty()}">
-            <div class="card-header">
-                <span class="card-title">📚 Sections (<span th:text="${sections.size()}">0</span>)</span>
+            <div class="card mb-24" th:if="${teachers != null && !teachers.isEmpty()}">
+                <div class="card-header">
+                    <span class="card-title">👨‍🏫 Faculty (<span th:text="${teachers.size()}">0</span>)</span>
+                </div>
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="t : ${teachers}">
+                        <td><strong th:text="${t.teacherId}">T001</strong></td>
+                        <td th:text="${t.user.fullName}">Prof. Name</td>
+                        <td th:text="${t.user.email}">email</td>
+                        <td th:text="${t.phone}">phone</td>
+                        <td>
+                            <div class="table-actions">
+                                <a th:href="@{'/admin/teachers/edit/' + ${t.id}}" class="btn btn-primary btn-sm">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
-            <table class="data-table">
-                <thead>
-                <tr>
-                    <th>Display Name</th>
-                    <th>Department</th>
-                    <th>Year</th>
-                    <th>Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="sec : ${sections}">
-                    <td><strong th:text="${sec.displayName}">CSE-A</strong></td>
-                    <td th:text="${sec.department != null ? sec.department.name : '-'}">CSE</td>
-                    <td th:text="${sec.academicYear != null ? sec.academicYear.label : '-'}">2nd Year</td>
-                    <td><a th:href="@{'/admin/timetables?sectionId=' + ${sec.id}}" class="btn btn-primary btn-sm">Timetable</a></td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Classrooms Matches -->
-        <div class="card" th:if="${classrooms != null && !classrooms.isEmpty()}">
-            <div class="card-header">
-                <span class="card-title">🏫 Classrooms & Labs (<span th:text="${classrooms.size()}">0</span>)</span>
+            <div class="card mb-24" th:if="${subjects != null && !subjects.isEmpty()}">
+                <div class="card-header">
+                    <span class="card-title">📖 Subjects & Courses (<span th:text="${subjects.size()}">0</span>)</span>
+                </div>
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Subject Name</th>
+                        <th>Type</th>
+                        <th>Department</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="sub : ${subjects}">
+                        <td><strong th:text="${sub.code}">CS201</strong></td>
+                        <td th:text="${sub.name}">Data Structures</td>
+                        <td><span class="badge badge-published" th:text="${sub.type}">THEORY</span></td>
+                        <td th:text="${sub.department != null ? sub.department.code : '-'}">CSE</td>
+                        <td>
+                            <div class="table-actions">
+                                <a th:href="@{'/admin/subjects/edit/' + ${sub.id}}" class="btn btn-primary btn-sm">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
-            <table class="data-table">
-                <thead>
-                <tr>
-                    <th>Room Name</th>
-                    <th>Type</th>
-                    <th>Capacity</th>
-                    <th>Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="c : ${classrooms}">
-                    <td><strong th:text="${c.name}">Room 101</strong></td>
-                    <td><span class="badge badge-published" th:text="${c.roomType}">CLASSROOM</span></td>
-                    <td th:text="${c.capacity + ' seats'}">60 seats</td>
-                    <td><a th:href="@{'/admin/classrooms/edit/' + ${c.id}}" class="btn btn-secondary btn-sm">Edit</a></td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div th:if="${(students == null || students.isEmpty()) && (teachers == null || teachers.isEmpty()) && (subjects == null || subjects.isEmpty()) && (sections == null || sections.isEmpty()) && (classrooms == null || classrooms.isEmpty())}" class="card">
-            <div class="empty-state">
-                <div class="empty-icon">🔍</div>
-                <div class="empty-text">No matches found for "<span th:text="${query}"></span>". Try searching with a different keyword.</div>
+            <div class="card mb-24" th:if="${sections != null && !sections.isEmpty()}">
+                <div class="card-header">
+                    <span class="card-title">📚 Sections (<span th:text="${sections.size()}">0</span>)</span>
+                </div>
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Display Name</th>
+                        <th>Department</th>
+                        <th>Year</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="sec : ${sections}">
+                        <td><strong th:text="${sec.displayName}">CSE-A</strong></td>
+                        <td th:text="${sec.department != null ? sec.department.name : '-'}">CSE</td>
+                        <td th:text="${sec.academicYear != null ? sec.academicYear.label : '-'}">2nd Year</td>
+                        <td>
+                            <div class="table-actions">
+                                <a th:href="@{'/admin/timetables?sectionId=' + ${sec.id}}" class="btn btn-primary btn-sm">Timetable</a>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card mb-24" th:if="${classrooms != null && !classrooms.isEmpty()}">
+                <div class="card-header">
+                    <span class="card-title">🏫 Classrooms & Labs (<span th:text="${classrooms.size()}">0</span>)</span>
+                </div>
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Room Name</th>
+                        <th>Type</th>
+                        <th>Capacity</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="c : ${classrooms}">
+                        <td><strong th:text="${c.name}">Room 101</strong></td>
+                        <td><span class="badge badge-published" th:text="${c.roomType}">CLASSROOM</span></td>
+                        <td th:text="${c.capacity + ' seats'}">60 seats</td>
+                        <td>
+                            <div class="table-actions">
+                                <a th:href="@{'/admin/classrooms/edit/' + ${c.id}}" class="btn btn-primary btn-sm">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div th:if="${(students == null || students.isEmpty()) && (teachers == null || teachers.isEmpty()) && (subjects == null || subjects.isEmpty()) && (sections == null || sections.isEmpty()) && (classrooms == null || classrooms.isEmpty())}" class="card">
+                <div class="empty-state">
+                    <div class="empty-icon">🔍</div>
+                    <div class="empty-title">No matches found</div>
+                    <div class="empty-text">No matches found for "<span th:text="${query}"></span>". Try searching with a different keyword.</div>
+                </div>
             </div>
         </div>
     </main>
 </div>
-
 <script th:src="@{/js/app.js}"></script>
 <script th:src="@{/js/notifications.js}"></script>
 <script th:src="@{/js/mobile.js}"></script>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" data-role="admin" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,68 +12,63 @@
     <aside class="sidebar" th:replace="~{fragments/sidebar :: sidebar('students')}"></aside>
     <main class="main-content">
         <header class="header" th:replace="~{fragments/header :: header('Batch Data Import')}"></header>
-
-        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
-        <div th:if="${warningMessage}" class="alert alert-warning" th:text="${warningMessage}"></div>
-        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
-
-        <!-- Import Result Card if available -->
-        <div class="card mb-24" th:if="${importResult != null}">
-            <div class="card-header">
-                <span class="card-title">📊 Import Summary Results</span>
-            </div>
-            <div style="display: flex; gap: 24px; margin-top: 12px;">
-                <div>
-                    <span style="font-size: 24px; font-weight: 700; color: var(--success);" th:text="${importResult.successCount}">0</span>
-                    <div class="text-muted">Successfully Imported</div>
-                </div>
-                <div>
-                    <span style="font-size: 24px; font-weight: 700; color: var(--error);" th:text="${importResult.errorCount}">0</span>
-                    <div class="text-muted">Failed / Errors</div>
+        <div class="content-wrapper">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1 class="page-title">Batch Data Import</h1>
                 </div>
             </div>
-
-            <!-- Errors breakdown -->
-            <div th:if="${!importResult.errors.isEmpty()}" style="margin-top: 16px; padding: 12px; background-color: #fde8e8; border-radius: 6px;">
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${warningMessage}" class="alert alert-warning" th:text="${warningMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+            <div class="stats-grid mb-24" th:if="${importResult != null}">
+                <div class="stat-card">
+                    <div class="stat-icon-wrap" style="background-color: rgba(34,197,94,0.1); color: var(--success);">✅</div>
+                    <div>
+                        <div class="stat-value" style="color: var(--success);" th:text="${importResult.successCount}">0</div>
+                        <div class="stat-label">Successfully Imported</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-wrap" style="background-color: rgba(239,68,68,0.1); color: var(--error);">❌</div>
+                    <div>
+                        <div class="stat-value" style="color: var(--error);" th:text="${importResult.errorCount}">0</div>
+                        <div class="stat-label">Failed / Errors</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card mb-24" th:if="${importResult != null && !importResult.errors.isEmpty()}">
                 <div style="font-weight: 600; color: var(--error); margin-bottom: 6px;">Error Details:</div>
                 <ul style="margin-left: 20px; color: var(--error); font-size: 13px;">
                     <li th:each="err : ${importResult.errors}" th:text="${err}">Error detail</li>
                 </ul>
             </div>
-        </div>
-
-        <!-- Category Selector Tabs -->
-        <div class="day-tabs">
-            <a th:href="@{/admin/import/students}" class="day-tab" th:classappend="${type == 'students'} ? 'active'">🎓 Students</a>
-            <a th:href="@{/admin/import/teachers}" class="day-tab" th:classappend="${type == 'teachers'} ? 'active'">👨‍🏫 Teachers</a>
-            <a th:href="@{/admin/import/subjects}" class="day-tab" th:classappend="${type == 'subjects'} ? 'active'">📖 Subjects</a>
-            <a th:href="@{/admin/import/classrooms}" class="day-tab" th:classappend="${type == 'classrooms'} ? 'active'">🏫 Classrooms</a>
-        </div>
-
-        <!-- File Upload Card -->
-        <div class="card" style="max-width: 650px;">
-            <div class="card-header flex-between flex-center">
-                <span class="card-title" th:text="${'Upload ' + #strings.capitalize(type) + ' File (CSV or Excel)'}">Upload File</span>
-                <a th:href="@{'/admin/import/template/' + ${type}}" class="btn btn-secondary btn-sm">📄 Download Sample CSV Template</a>
+            <div class="day-tabs">
+                <a th:href="@{/admin/import/students}" class="day-tab" th:classappend="${type == 'students'} ? 'active'">🎓 Students</a>
+                <a th:href="@{/admin/import/teachers}" class="day-tab" th:classappend="${type == 'teachers'} ? 'active'">👨‍🏫 Teachers</a>
+                <a th:href="@{/admin/import/subjects}" class="day-tab" th:classappend="${type == 'subjects'} ? 'active'">📖 Subjects</a>
+                <a th:href="@{/admin/import/classrooms}" class="day-tab" th:classappend="${type == 'classrooms'} ? 'active'">🏫 Classrooms</a>
             </div>
-
-            <form th:action="@{'/admin/import/' + ${type}}" method="post" enctype="multipart/form-data" style="margin-top: 20px;">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-
-                <div class="form-group">
-                    <label class="form-label">Choose CSV or XLSX / XLS file *</label>
-                    <input type="file" name="file" class="form-control" accept=".csv, .xlsx, .xls" required style="padding: 8px;">
-                    <span class="text-muted" style="font-size: 12px; margin-top: 4px; display: block;">Supports standard CSV and Microsoft Excel (.xlsx, .xls) formats up to 10MB.</span>
+            <div class="card" style="max-width: 650px;">
+                <div class="card-header flex-between flex-center">
+                    <span class="card-title" th:text="${'Upload ' + #strings.capitalize(type) + ' File (CSV or Excel)'}">Upload File</span>
+                    <a th:href="@{'/admin/import/template/' + ${type}}" class="btn btn-primary btn-sm">📄 Download Sample Template</a>
                 </div>
-
-                <div style="margin-top: 24px;">
-                    <button type="submit" class="btn btn-primary">Start Import Processing</button>
-                </div>
-            </form>
+                <form th:action="@{'/admin/import/' + ${type}}" method="post" enctype="multipart/form-data" style="margin-top: 20px;">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <div class="form-group">
+                        <label class="form-label">Choose CSV or XLSX / XLS file *</label>
+                        <input type="file" name="file" class="form-control" accept=".csv, .xlsx, .xls" required style="padding: 8px;">
+                        <span class="text-muted" style="font-size: 12px; margin-top: 4px; display: block;">Supports standard CSV and Microsoft Excel (.xlsx, .xls) formats up to 10MB.</span>
+                    </div>
+                    <div style="margin-top: 24px;">
+                        <button type="submit" class="btn btn-primary">Start Import Processing</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </main>
 </div>
-
 <script th:src="@{/js/app.js}"></script>
 <script th:src="@{/js/notifications.js}"></script>
 <script th:src="@{/js/mobile.js}"></script>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" data-role="admin" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,89 +12,108 @@
     <aside class="sidebar" th:replace="~{fragments/sidebar :: sidebar('sections')}"></aside>
     <main class="main-content">
         <header class="header" th:replace="~{fragments/header :: header('Section Management')}"></header>
+        <div class="content-wrapper">
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
 
-        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
-        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
-
-        <!-- Add / Edit Section Card -->
-        <div class="card mb-24" style="max-width: 750px;">
-            <div class="card-header">
-                <span class="card-title" th:text="${editSection != null ? '✏️ Edit Section' : '➕ Add New Section'}">Add Section</span>
-            </div>
-
-            <form th:action="${editSection != null} ? @{'/admin/sections/edit/' + ${editSection.id}} : @{/admin/sections}" method="post" style="margin-top: 16px;">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Department *</label>
-                        <select name="departmentId" class="form-control form-select" required>
-                            <option value="">-- Choose Department --</option>
-                            <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name + ' (' + d.code + ')'}"
-                                    th:selected="${editSection != null && editSection.department != null && editSection.department.id == d.id}">CSE</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Academic Year *</label>
-                        <select name="academicYearId" class="form-control form-select" required>
-                            <option value="">-- Choose Year --</option>
-                            <option th:each="y : ${years}" th:value="${y.id}" th:text="${y.label + ' (Year ' + y.yearNumber + ')'}"
-                                    th:selected="${editSection != null && editSection.academicYear != null && editSection.academicYear.id == y.id}">2nd Year</option>
-                        </select>
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1 class="page-title">Sections Management</h1>
+                </div>
+                <div class="page-header-actions">
+                    <div class="search-wrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" class="form-control search-input" placeholder="Search sections...">
                     </div>
                 </div>
-
-                <div class="form-group">
-                    <label class="form-label">Section Identifier / Name * (e.g., A, B, C)</label>
-                    <input type="text" name="name" class="form-control" required placeholder="e.g., A" style="text-transform: uppercase;"
-                           th:value="${editSection != null ? editSection.name : ''}">
-                </div>
-
-                <div style="display: flex; gap: 12px; margin-top: 12px;">
-                    <button type="submit" class="btn btn-primary" th:text="${editSection != null ? 'Update Section' : 'Create Section'}">Create Section</button>
-                    <a th:if="${editSection != null}" th:href="@{/admin/sections}" class="btn btn-secondary">Cancel</a>
-                </div>
-            </form>
-        </div>
-
-        <!-- Sections List Table -->
-        <div class="card">
-            <div class="card-header">
-                <span class="card-title">📚 Active Sections (<span th:text="${sections.size()}">0</span>)</span>
             </div>
 
-            <div style="overflow-x: auto; margin-top: 12px;">
-                <table class="data-table">
-                    <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Display Name</th>
-                        <th>Department</th>
-                        <th>Academic Year</th>
-                        <th>Section Code</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="s : ${sections}">
-                        <td th:text="${s.id}">1</td>
-                        <td><strong style="color: var(--primary);" th:text="${s.displayName}">CSE-A</strong></td>
-                        <td th:text="${s.department != null ? s.department.name : '-'}">CSE</td>
-                        <td th:text="${s.academicYear != null ? s.academicYear.label : '-'}">2nd Year</td>
-                        <td th:text="${s.name}">A</td>
-                        <td>
-                            <div class="table-actions">
-                                <a th:href="@{'/admin/timetables?sectionId=' + ${s.id}}" class="btn btn-primary btn-sm">Timetable</a>
-                                <a th:href="@{'/admin/sections/edit/' + ${s.id}}" class="btn btn-secondary btn-sm">Edit</a>
-                                <form th:action="@{'/admin/sections/delete/' + ${s.id}}" method="post" style="display: inline;" onsubmit="return confirm('Delete this section?');">
-                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+            <!-- Add / Edit Section Card -->
+            <div class="card mb-24" style="max-width: 750px;">
+                <div class="card-header">
+                    <span class="card-title" th:text="${editSection != null ? '✏️ Edit Section' : '➕ Add New Section'}">Add Section</span>
+                </div>
+
+                <form th:action="${editSection != null} ? @{'/admin/sections/edit/' + ${editSection.id}} : @{/admin/sections}" method="post" style="margin-top: 16px;">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Department *</label>
+                            <select name="departmentId" class="form-control form-select" required>
+                                <option value="">-- Choose Department --</option>
+                                <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name + ' (' + d.code + ')'}"
+                                        th:selected="${editSection != null && editSection.department != null && editSection.department.id == d.id}">CSE</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Academic Year *</label>
+                            <select name="academicYearId" class="form-control form-select" required>
+                                <option value="">-- Choose Year --</option>
+                                <option th:each="y : ${years}" th:value="${y.id}" th:text="${y.label + ' (Year ' + y.yearNumber + ')'}"
+                                        th:selected="${editSection != null && editSection.academicYear != null && editSection.academicYear.id == y.id}">2nd Year</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Section Identifier / Name * (e.g., A, B, C)</label>
+                        <input type="text" name="name" class="form-control" required placeholder="e.g., A" style="text-transform: uppercase;"
+                               th:value="${editSection != null ? editSection.name : ''}">
+                    </div>
+
+                    <div style="display: flex; gap: 12px; margin-top: 12px;">
+                        <button type="submit" class="btn btn-primary" th:text="${editSection != null ? 'Update Section' : 'Create Section'}">Create Section</button>
+                        <a th:if="${editSection != null}" th:href="@{/admin/sections}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Sections List Table -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📚 Active Sections (<span th:text="${sections.size()}">0</span>)</span>
+                </div>
+
+                <div th:if="${#lists.isEmpty(sections)}" class="empty-state">
+                    <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
+                    <h3>No Sections Found</h3>
+                    <p>Add sections to get started.</p>
+                </div>
+
+                <div th:unless="${#lists.isEmpty(sections)}" style="overflow-x: auto; margin-top: 12px;">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Display Name</th>
+                            <th>Department</th>
+                            <th>Academic Year</th>
+                            <th>Section Code</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="s : ${sections}">
+                            <td th:text="${s.id}">1</td>
+                            <td><strong style="color: var(--primary);" th:text="${s.displayName}">CSE-A</strong></td>
+                            <td th:text="${s.department != null ? s.department.name : '-'}">CSE</td>
+                            <td th:text="${s.academicYear != null ? s.academicYear.label : '-'}">2nd Year</td>
+                            <td th:text="${s.name}">A</td>
+                            <td>
+                                <div class="table-actions">
+                                    <a th:href="@{'/admin/timetables?sectionId=' + ${s.id}}" class="btn btn-primary btn-sm">Timetable</a>
+                                    <a th:href="@{'/admin/sections/edit/' + ${s.id}}" class="btn btn-secondary btn-sm">Edit</a>
+                                    <form th:action="@{'/admin/sections/delete/' + ${s.id}}" method="post" style="display: inline;" onsubmit="return confirm('Delete this section?');">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </main>

@@ -1,44 +1,55 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" data-role="admin" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Notifications | Smart Schedule Assist</title>
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <link rel="stylesheet" th:href="@{/css/responsive.css}">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
 </head>
 <body>
 <div class="app-layout">
     <aside class="sidebar" th:replace="~{fragments/sidebar :: sidebar('notifications')}"></aside>
     <main class="main-content">
         <header class="header" th:replace="~{fragments/header :: header('Notifications')}"></header>
-
-        <div class="flex-between flex-center mb-20">
-            <h1 class="page-title" style="margin-bottom: 0;">Admin Notifications</h1>
-            <button onclick="markAllNotificationsAsRead()" class="btn btn-secondary btn-sm">✓ Mark All as Read</button>
-        </div>
-
-        <div class="card" th:if="${notifications.isEmpty()}">
-            <div class="empty-state">
-                <div class="empty-icon">🔔</div>
-                <div class="empty-text">No system notifications right now.</div>
-            </div>
-        </div>
-
-        <div class="card" th:if="${!notifications.isEmpty()}" style="padding: 0;">
-            <div th:each="n : ${notifications}"
-                 class="notification-item"
-                 th:classappend="${!n.read} ? 'unread'"
-                 th:onclick="'markNotificationRead(' + ${n.id} + ')'"
-                 style="padding: 16px 20px; border-bottom: 1px solid var(--border); cursor: pointer;">
-                <div class="flex-between flex-center">
-                    <span class="notification-title" style="font-size: 15px; font-weight: 600;" th:text="${n.title}">Notification Title</span>
-                    <span class="notification-time text-muted" style="font-size: 12px;" th:text="${#temporals.format(n.createdAt, 'MMM dd, yyyy hh:mm a')}">Date</span>
+        <div class="content-wrapper">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1 class="page-title">Admin Notifications</h1>
                 </div>
-                <div class="notification-message text-muted mt-8" style="font-size: 14px;" th:text="${n.message}">Message</div>
-                <div class="mt-8" style="display: flex; gap: 8px; align-items: center;">
-                    <span class="badge badge-published" th:text="${n.type}">TYPE</span>
-                    <span th:if="${!n.read}" class="badge badge-pending" style="font-size: 10px;">Unread</span>
+                <div class="page-header-actions">
+                    <div class="search-wrap" style="margin-right: 12px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" class="form-control search-input" placeholder="Search notifications...">
+                    </div>
+                    <button onclick="markAllNotificationsAsRead()" class="btn btn-secondary">✓ Mark All as Read</button>
+                </div>
+            </div>
+
+            <div class="card" th:if="${notifications.isEmpty()}">
+                <div class="empty-state">
+                    <div class="empty-icon" style="font-size: 48px; margin-bottom: 16px;">🔔</div>
+                    <h3>No Notifications</h3>
+                    <div class="empty-text">No system notifications right now.</div>
+                </div>
+            </div>
+
+            <div class="card" th:if="${!notifications.isEmpty()}" style="padding: 0;">
+                <div th:each="n : ${notifications}"
+                     class="notification-item"
+                     th:classappend="${!n.read} ? 'unread' : ''"
+                     th:onclick="'markNotificationRead(' + ${n.id} + ')'"
+                     style="padding: 16px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background-color 0.2s;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="notification-title" style="font-size: 15px; font-weight: 600; color: var(--text-main);" th:text="${n.title}">Notification Title</span>
+                        <span class="notification-time text-muted" style="font-size: 12px;" th:text="${#temporals.format(n.createdAt, 'MMM dd, yyyy hh:mm a')}">Date</span>
+                    </div>
+                    <div class="notification-message text-muted" style="font-size: 14px; margin-top: 8px;" th:text="${n.message}">Message</div>
+                    <div style="margin-top: 8px; display: flex; gap: 8px; align-items: center;">
+                        <span class="badge badge-published" th:text="${n.type}">TYPE</span>
+                        <span th:if="${!n.read}" class="badge badge-pending" style="font-size: 10px;">Unread</span>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,138 +1,184 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html data-role="teacher" data-theme="light" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Faculty Timetable | Smart Schedule Assist</title>
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <link rel="stylesheet" th:href="@{/css/responsive.css}">
     <link rel="stylesheet" th:href="@{/css/print.css}" media="print">
 </head>
 <body>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <div class="app-layout">
     <aside class="sidebar" th:replace="~{fragments/sidebar :: sidebar('timetable')}"></aside>
+    
     <main class="main-content">
-        <header class="header" th:replace="~{fragments/header :: header('Weekly Faculty Timetable')}"></header>
+        <div class="content-wrapper">
+            <header class="header" th:replace="~{fragments/header :: header('Weekly Faculty Timetable')}"></header>
 
-        <div class="flex-between flex-center mb-20">
-            <div>
-                <h1 class="page-title" style="margin-bottom: 4px;">Faculty Schedule</h1>
-                <p class="text-muted">
-                    Teacher: <strong th:text="${teacher.user.fullName}">Prof. Name</strong> |
-                    ID: <strong th:text="${teacher.teacherId}">T001</strong>
-                </p>
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Faculty Schedule</h1>
+                    <p class="page-subtitle">
+                        Teacher: <strong th:text="${teacher.user.fullName}">Prof. Name</strong> |
+                        ID: <strong th:text="${teacher.teacherId}">T001</strong>
+                    </p>
+                </div>
+                <div class="page-header-actions no-print">
+                    <button onclick="window.print()" class="btn btn-secondary">🖨️ Print</button>
+                    <a th:href="@{/teacher/timetable/pdf}" class="btn btn-primary">📄 Download PDF</a>
+                </div>
             </div>
-            <div>
-                <a th:href="@{/teacher/timetable/pdf}" class="btn btn-primary btn-sm">📄 Download PDF</a>
+
+            <div class="day-tabs no-print">
+                <a th:href="@{/teacher/timetable}" class="day-tab" th:classappend="${selectedDay == null} ? 'active'">All Week</a>
+                <a th:href="@{/teacher/timetable/day/MONDAY}" class="day-tab" th:classappend="${selectedDay != null && selectedDay.name() == 'MONDAY'} ? 'active'">Mon</a>
+                <a th:href="@{/teacher/timetable/day/TUESDAY}" class="day-tab" th:classappend="${selectedDay != null && selectedDay.name() == 'TUESDAY'} ? 'active'">Tue</a>
+                <a th:href="@{/teacher/timetable/day/WEDNESDAY}" class="day-tab" th:classappend="${selectedDay != null && selectedDay.name() == 'WEDNESDAY'} ? 'active'">Wed</a>
+                <a th:href="@{/teacher/timetable/day/THURSDAY}" class="day-tab" th:classappend="${selectedDay != null && selectedDay.name() == 'THURSDAY'} ? 'active'">Thu</a>
+                <a th:href="@{/teacher/timetable/day/FRIDAY}" class="day-tab" th:classappend="${selectedDay != null && selectedDay.name() == 'FRIDAY'} ? 'active'">Fri</a>
             </div>
-        </div>
 
-        <div class="day-tabs">
-            <a th:href="@{/teacher/timetable}" class="day-tab" th:classappend="${selectedDay == null} ? 'active'">All Week (Mon-Fri)</a>
-            <a th:href="@{/teacher/timetable/day/MONDAY}" class="day-tab" th:classappend="${selectedDay != null && selectedDay.name() == 'MONDAY'} ? 'active'">Monday</a>
-            <a th:href="@{/teacher/timetable/day/TUESDAY}" class="day-tab" th:classappend="${selectedDay != null && selectedDay.name() == 'TUESDAY'} ? 'active'">Tuesday</a>
-            <a th:href="@{/teacher/timetable/day/WEDNESDAY}" class="day-tab" th:classappend="${selectedDay != null && selectedDay.name() == 'WEDNESDAY'} ? 'active'">Wednesday</a>
-            <a th:href="@{/teacher/timetable/day/THURSDAY}" class="day-tab" th:classappend="${selectedDay != null && selectedDay.name() == 'THURSDAY'} ? 'active'">Thursday</a>
-            <a th:href="@{/teacher/timetable/day/FRIDAY}" class="day-tab" th:classappend="${selectedDay != null && selectedDay.name() == 'FRIDAY'} ? 'active'">Friday</a>
-        </div>
+            <div class="card timetable-grid mb-24" th:if="${selectedDay == null}">
+                <div style="overflow-x: auto;">
+                    <table class="timetable-table">
+                        <thead>
+                        <tr>
+                            <th style="width: 14%;">Period / Time</th>
+                            <th style="width: 17.2%;">Monday</th>
+                            <th style="width: 17.2%;">Tuesday</th>
+                            <th style="width: 17.2%;">Wednesday</th>
+                            <th style="width: 17.2%;">Thursday</th>
+                            <th style="width: 17.2%;">Friday</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="period : ${allPeriods}">
+                            <td style="background-color: var(--surface-2); font-weight: 600; text-align: center; vertical-align: middle;">
+                                <span th:text="${'Period ' + period.periodNumber}">Period 1</span><br>
+                                <span style="font-size: 11px; font-weight: normal; color: var(--text-secondary);"
+                                      th:text="${#temporals.format(period.startTime, 'hh:mm a') + ' - ' + #temporals.format(period.endTime, 'hh:mm a')}">09:00 - 09:50</span>
+                            </td>
 
-        <div class="card timetable-grid" th:if="${selectedDay == null}">
-            <div style="overflow-x: auto;">
-                <table class="timetable-table">
-                    <thead>
-                    <tr>
-                        <th style="width: 14%;">Period / Time</th>
-                        <th style="width: 17.2%;">Monday</th>
-                        <th style="width: 17.2%;">Tuesday</th>
-                        <th style="width: 17.2%;">Wednesday</th>
-                        <th style="width: 17.2%;">Thursday</th>
-                        <th style="width: 17.2%;">Friday</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="period : ${allPeriods}">
-                        <td style="background-color: #f8f9fa; font-weight: 600; text-align: center; vertical-align: middle;">
-                            <span th:text="${'Period ' + period.periodNumber}">Period 1</span><br>
-                            <span style="font-size: 11px; font-weight: normal; color: var(--text-secondary);"
-                                  th:text="${#temporals.format(period.startTime, 'hh:mm a') + ' - ' + #temporals.format(period.endTime, 'hh:mm a')}">09:00 - 09:50</span>
-                        </td>
+                            <td th:if="${period.type.name() == 'BREAK'}" colspan="5" class="cell-break">
+                                ☕ Short Break
+                            </td>
 
-                        <td th:if="${period.type.name() == 'BREAK'}" colspan="5" class="cell-break">
-                            ☕ Short Break
-                        </td>
+                            <td th:if="${period.type.name() == 'LUNCH'}" colspan="5" class="cell-lunch" style="font-weight: 600; color: var(--warning);">
+                                🍱 Lunch Break
+                            </td>
 
-                        <td th:if="${period.type.name() == 'LUNCH'}" colspan="5" class="cell-lunch" style="font-weight: 600; color: var(--warning);">
-                            🍱 Lunch Break
-                        </td>
-
-                        <td th:if="${period.type.name() == 'CLASS'}" th:each="day : ${T(java.time.DayOfWeek).values()}" th:if="${day.value <= 5}">
-                            <div th:with="dayList=${weeklyTimetable.get(day)}, matchingEntries=${dayList != null ? dayList.?[period.id == #root.period.id] : null}">
-                                <div th:if="${matchingEntries != null && !matchingEntries.isEmpty() && matchingEntries[0].subject != null}"
-                                     class="timetable-cell"
-                                     th:classappend="${matchingEntries[0].status.name() == 'CANCELLED'} ? 'cell-cancelled' : ''">
-                                    <div style="font-weight: 700; color: var(--primary);" th:text="${matchingEntries[0].section != null ? matchingEntries[0].section.displayName : '-'}">CSE-A</div>
-                                    <div class="cell-subject" th:text="${matchingEntries[0].subject.name}">Data Structures</div>
-                                    <div class="cell-room" th:if="${matchingEntries[0].classroom != null}">📍 <span th:text="${matchingEntries[0].classroom.name}">Room 101</span></div>
-                                    <div th:if="${matchingEntries[0].status.name() == 'CANCELLED'}" class="badge badge-rejected" style="margin-top: 4px; font-size: 10px;">CANCELLED</div>
+                            <td th:if="${period.type.name() == 'CLASS'}" th:each="day : ${T(java.time.DayOfWeek).values()}" th:if="${day.value <= 5}">
+                                <div th:with="dayList=${weeklyTimetable.get(day)}, matchingEntries=${dayList != null ? dayList.?[period.id == #root.period.id] : null}">
+                                    <div th:if="${matchingEntries != null && !matchingEntries.isEmpty() && matchingEntries[0].subject != null}"
+                                         class="timetable-cell"
+                                         th:classappend="${matchingEntries[0].status.name() == 'CANCELLED'} ? 'cell-cancelled' : ''">
+                                        <div style="font-weight: 700; color: var(--role-primary);" th:text="${matchingEntries[0].section != null ? matchingEntries[0].section.displayName : '-'}">CSE-A</div>
+                                        <div class="cell-subject" th:text="${matchingEntries[0].subject.name}">Data Structures</div>
+                                        <div class="cell-room" th:if="${matchingEntries[0].classroom != null}">📍 <span th:text="${matchingEntries[0].classroom.name}">Room 101</span></div>
+                                        <div th:if="${matchingEntries[0].status.name() == 'CANCELLED'}" class="badge badge-rejected mt-4" style="font-size: 10px;">CANCELLED</div>
+                                    </div>
+                                    <div th:if="${matchingEntries == null || matchingEntries.isEmpty() || matchingEntries[0].subject == null}" class="cell-free" style="padding: 12px; color: var(--text-muted); font-size: 12px; text-align: center; opacity: 0.5;">
+                                        FREE
+                                    </div>
                                 </div>
-                                <div th:if="${matchingEntries == null || matchingEntries.isEmpty() || matchingEntries[0].subject == null}" class="cell-free" style="padding: 12px; color: var(--cancelled); font-size: 12px; text-align: center;">
-                                    FREE
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
 
-        <div class="card" th:if="${selectedDay != null}">
-            <h3 class="section-title" th:text="${#strings.capitalize(#strings.toLowerCase(selectedDay)) + ' Schedule'}">Day Schedule</h3>
-            <table class="data-table">
-                <thead>
-                <tr>
-                    <th>Period & Time</th>
-                    <th>Section</th>
-                    <th>Subject</th>
-                    <th>Classroom</th>
-                    <th>Status</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="period : ${allPeriods}">
-                    <td>
-                        <strong th:text="${'Period ' + period.periodNumber}">Period 1</strong><br>
-                        <span class="text-muted" style="font-size: 12px;" th:text="${#temporals.format(period.startTime, 'hh:mm a') + ' - ' + #temporals.format(period.endTime, 'hh:mm a')}">09:00 - 09:50</span>
-                    </td>
-                    <td th:if="${period.type.name() == 'BREAK'}" colspan="4" style="background-color: #f1f3f4; text-align: center; color: var(--text-secondary); font-style: italic;">
-                        ☕ Short Break
-                    </td>
-                    <td th:if="${period.type.name() == 'LUNCH'}" colspan="4" style="background-color: #fff3e0; text-align: center; color: var(--warning); font-weight: 600;">
-                        🍱 Lunch Break
-                    </td>
-                    <td th:if="${period.type.name() == 'CLASS'}" th:with="matchingEntries=${dayEntries != null ? dayEntries.?[period.id == #root.period.id] : null}">
-                        <strong th:if="${matchingEntries != null && !matchingEntries.isEmpty() && matchingEntries[0].section != null}" th:text="${matchingEntries[0].section.displayName}">CSE-A</strong>
-                        <span th:if="${matchingEntries == null || matchingEntries.isEmpty() || matchingEntries[0].section == null}">-</span>
-                    </td>
-                    <td th:if="${period.type.name() == 'CLASS'}" th:with="matchingEntries=${dayEntries != null ? dayEntries.?[period.id == #root.period.id] : null}">
-                        <strong th:if="${matchingEntries != null && !matchingEntries.isEmpty() && matchingEntries[0].subject != null}" th:text="${matchingEntries[0].subject.name}">Data Structures</strong>
-                        <span th:if="${matchingEntries == null || matchingEntries.isEmpty() || matchingEntries[0].subject == null}">FREE</span>
-                    </td>
-                    <td th:if="${period.type.name() == 'CLASS'}" th:with="matchingEntries=${dayEntries != null ? dayEntries.?[period.id == #root.period.id] : null}">
-                        <span th:if="${matchingEntries != null && !matchingEntries.isEmpty() && matchingEntries[0].classroom != null}" th:text="${matchingEntries[0].classroom.name}">Room 101</span>
-                        <span th:if="${matchingEntries == null || matchingEntries.isEmpty() || matchingEntries[0].classroom == null}">-</span>
-                    </td>
-                    <td th:if="${period.type.name() == 'CLASS'}" th:with="matchingEntries=${dayEntries != null ? dayEntries.?[period.id == #root.period.id] : null}">
-                        <span th:if="${matchingEntries != null && !matchingEntries.isEmpty() && matchingEntries[0].status.name() == 'ACTIVE' && matchingEntries[0].subject != null}" class="badge badge-active">Teaching</span>
-                        <span th:if="${matchingEntries != null && !matchingEntries.isEmpty() && matchingEntries[0].status.name() == 'SUBSTITUTE'}" class="badge badge-substitute">Substitute</span>
-                        <span th:if="${matchingEntries != null && !matchingEntries.isEmpty() && matchingEntries[0].status.name() == 'CANCELLED'}" class="badge badge-rejected">CANCELLED</span>
-                        <span th:if="${matchingEntries == null || matchingEntries.isEmpty() || matchingEntries[0].subject == null}" class="badge badge-free">Free</span>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+            <div class="card mb-24" th:if="${selectedDay != null}">
+                <div class="card-header">
+                    <span class="card-title" th:text="${#strings.capitalize(#strings.toLowerCase(selectedDay)) + ' Schedule'}">Day Schedule</span>
+                </div>
+                <div style="overflow-x: auto; margin-top: 12px;">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>Period & Time</th>
+                            <th>Section</th>
+                            <th>Subject</th>
+                            <th>Classroom</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="period : ${allPeriods}">
+                            <td>
+                                <strong th:text="${'Period ' + period.periodNumber}">Period 1</strong><br>
+                                <span class="text-muted" style="font-size: 12px;" th:text="${#temporals.format(period.startTime, 'hh:mm a') + ' - ' + #temporals.format(period.endTime, 'hh:mm a')}">09:00 - 09:50</span>
+                            </td>
+                            <td th:if="${period.type.name() == 'BREAK'}" colspan="4" style="background-color: var(--surface-2); text-align: center; color: var(--text-secondary); font-style: italic;">
+                                ☕ Short Break
+                            </td>
+                            <td th:if="${period.type.name() == 'LUNCH'}" colspan="4" style="background-color: var(--warning-soft); text-align: center; color: var(--warning); font-weight: 600;">
+                                🍱 Lunch Break
+                            </td>
+                            <td th:if="${period.type.name() == 'CLASS'}" th:with="matchingEntries=${dayEntries != null ? dayEntries.?[period.id == #root.period.id] : null}">
+                                <strong th:if="${matchingEntries != null && !matchingEntries.isEmpty() && matchingEntries[0].section != null}" th:text="${matchingEntries[0].section.displayName}">CSE-A</strong>
+                                <span th:if="${matchingEntries == null || matchingEntries.isEmpty() || matchingEntries[0].section == null}" class="text-muted">-</span>
+                            </td>
+                            <td th:if="${period.type.name() == 'CLASS'}" th:with="matchingEntries=${dayEntries != null ? dayEntries.?[period.id == #root.period.id] : null}">
+                                <strong th:if="${matchingEntries != null && !matchingEntries.isEmpty() && matchingEntries[0].subject != null}" th:text="${matchingEntries[0].subject.name}">Data Structures</strong>
+                                <span th:if="${matchingEntries == null || matchingEntries.isEmpty() || matchingEntries[0].subject == null}" class="badge badge-free">FREE</span>
+                            </td>
+                            <td th:if="${period.type.name() == 'CLASS'}" th:with="matchingEntries=${dayEntries != null ? dayEntries.?[period.id == #root.period.id] : null}">
+                                <span th:if="${matchingEntries != null && !matchingEntries.isEmpty() && matchingEntries[0].classroom != null}" th:text="${matchingEntries[0].classroom.name}">Room 101</span>
+                                <span th:if="${matchingEntries == null || matchingEntries.isEmpty() || matchingEntries[0].classroom == null}" class="text-muted">-</span>
+                            </td>
+                            <td th:if="${period.type.name() == 'CLASS'}" th:with="matchingEntries=${dayEntries != null ? dayEntries.?[period.id == #root.period.id] : null}">
+                                <span th:if="${matchingEntries != null && !matchingEntries.isEmpty() && matchingEntries[0].status.name() == 'ACTIVE' && matchingEntries[0].subject != null}" class="badge badge-active">Teaching</span>
+                                <span th:if="${matchingEntries != null && !matchingEntries.isEmpty() && matchingEntries[0].status.name() == 'SUBSTITUTE'}" class="badge badge-substitute">Substitute</span>
+                                <span th:if="${matchingEntries != null && !matchingEntries.isEmpty() && matchingEntries[0].status.name() == 'CANCELLED'}" class="badge badge-rejected">CANCELLED</span>
+                                <span th:if="${matchingEntries == null || matchingEntries.isEmpty() || matchingEntries[0].subject == null}" class="text-muted">-</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
         </div>
     </main>
+    
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a th:href="@{/teacher/dashboard}" class="bottom-nav-item">
+            <div class="bottom-nav-icon">
+                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            </div>
+            <span>Home</span>
+        </a>
+        <a th:href="@{/teacher/timetable}" class="bottom-nav-item active">
+            <div class="bottom-nav-icon">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </div>
+            <span>Schedule</span>
+        </a>
+        <a th:href="@{/teacher/absence}" class="bottom-nav-item">
+            <div class="bottom-nav-icon">
+                <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            </div>
+            <span>Leaves</span>
+        </a>
+        <a th:href="@{/teacher/notifications}" class="bottom-nav-item">
+            <div class="bottom-nav-icon">
+                <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            </div>
+            <span>Alerts</span>
+        </a>
+        <a th:href="@{/teacher/profile}" class="bottom-nav-item">
+            <div class="bottom-nav-icon">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <span>Profile</span>
+        </a>
+    </nav>
 </div>
 
 <script th:src="@{/js/app.js}"></script>

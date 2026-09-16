@@ -1,316 +1,268 @@
-document.addEventListener('DOMContentLoaded', function() {
-  setupMobileMenu();
-  setupNotificationDropdown();
-  setupNextClassCountdown();
-  setupClassReminders();
-  setupDeleteConfirmations();
-  setupFormValidation();
-  setupTooltips();
-  setupAlertDismiss();
-  setupCascadingFilters();
-  
-  // Expose helpful utility
-  window.formatTimeAgo = formatTimeAgo;
-});
+// Smart Schedule Assist - App v2.0
 
-function setupMobileMenu() {
-  const menuBtn = document.querySelector('.mobile-menu-btn');
+// ── Theme System ──
+const THEME_KEY = 'ssa-theme';
+const SIDEBAR_KEY = 'ssa-sidebar-collapsed';
+
+function initTheme() {
+  const saved = localStorage.getItem(THEME_KEY) || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  updateThemeIcon(saved);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  const next = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem(THEME_KEY, next);
+  updateThemeIcon(next);
+}
+
+function updateThemeIcon(theme) {
+  const btn = document.getElementById('themeToggleBtn');
+  if (!btn) return;
+  btn.innerHTML = theme === 'dark'
+    ? `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`
+    : `<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+}
+
+// ── Sidebar Collapse ──
+function initSidebar() {
   const sidebar = document.querySelector('.sidebar');
-  
-  if (!menuBtn || !sidebar) return;
-  
-  // Ensure overlay exists
-  let overlay = document.querySelector('.sidebar-overlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.className = 'sidebar-overlay';
-    document.body.appendChild(overlay);
+  const mainContent = document.querySelector('.main-content');
+  if (!sidebar || !mainContent) return;
+  const collapsed = localStorage.getItem(SIDEBAR_KEY) === 'true';
+  if (collapsed) {
+    sidebar.classList.add('collapsed');
+    mainContent.classList.add('sidebar-collapsed');
   }
-  
-  menuBtn.addEventListener('click', function() {
-    sidebar.classList.toggle('open');
-    overlay.classList.toggle('active');
-  });
-  
-  overlay.addEventListener('click', function() {
-    sidebar.classList.remove('open');
-    overlay.classList.remove('active');
+}
+
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const mainContent = document.querySelector('.main-content');
+  const overlay = document.querySelector('.sidebar-overlay');
+  if (!sidebar) return;
+  const isMobile = window.innerWidth <= 1024;
+  if (isMobile) {
+    sidebar.classList.toggle('mobile-open');
+    if (overlay) overlay.classList.toggle('show');
+  } else {
+    sidebar.classList.toggle('collapsed');
+    if (mainContent) mainContent.classList.toggle('sidebar-collapsed');
+    localStorage.setItem(SIDEBAR_KEY, sidebar.classList.contains('collapsed'));
+  }
+}
+
+function closeSidebarMobile() {
+  const sidebar = document.querySelector('.sidebar');
+  const overlay = document.querySelector('.sidebar-overlay');
+  if (sidebar) sidebar.classList.remove('mobile-open');
+  if (overlay) overlay.classList.remove('show');
+}
+
+// ── Profile Dropdown ──
+function toggleProfileDropdown() {
+  const dropdown = document.getElementById('profileDropdown');
+  if (dropdown) dropdown.classList.toggle('show');
+}
+
+// ── Notification Dropdown ──
+function toggleNotificationDropdown() {
+  const dropdown = document.getElementById('notificationDropdown');
+  if (dropdown) dropdown.classList.toggle('show');
+  if (dropdown && dropdown.classList.contains('show')) {
+    loadNotifications();
+  }
+}
+
+// ── Header Greeting ──
+function initGreeting() {
+  const greetEl = document.getElementById('greetingText');
+  if (!greetEl) return;
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const name = greetEl.getAttribute('data-name') || '';
+  greetEl.textContent = `${greeting}, ${name}`;
+}
+
+function initHeaderDate() {
+  const el = document.getElementById('headerDate');
+  if (!el) return;
+  const now = new Date();
+  el.textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+}
+
+// ── Live Countdown ──
+function initCountdown() {
+  const el = document.getElementById('classCountdown');
+  if (!el) return;
+  const targetTime = el.getAttribute('data-target');
+  if (!targetTime) return;
+
+  function update() {
+    const now = new Date();
+    const [h, m] = targetTime.split(':').map(Number);
+    const target = new Date(now);
+    target.setHours(h, m, 0, 0);
+    const diff = target - now;
+    if (diff <= 0) { el.textContent = 'Starting now'; return; }
+    const mins = Math.floor(diff / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+    el.textContent = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+  }
+  update();
+  setInterval(update, 1000);
+}
+
+// ── Toast System ──
+function showToast(message, type = 'info', duration = 4000) {
+  let container = document.querySelector('.toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+  const icons = {
+    success: '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',
+    error: '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    warning: '<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    info: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+  };
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `<div class="toast-icon">${icons[type] || icons.info}</div><span class="toast-message">${message}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('removing');
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
+}
+
+// ── Bottom Nav Active State ──
+function initBottomNav() {
+  const path = window.location.pathname;
+  document.querySelectorAll('.bottom-nav-item').forEach(item => {
+    const href = item.getAttribute('href');
+    if (href && path.includes(href)) item.classList.add('active');
   });
 }
 
-function setupNotificationDropdown() {
-  const bell = document.querySelector('.notification-bell');
-  const dropdown = document.querySelector('.notification-dropdown');
-  
-  if (!bell || !dropdown) return;
-  
-  bell.addEventListener('click', function(e) {
-    e.stopPropagation();
-    dropdown.classList.toggle('show');
-  });
-  
-  document.addEventListener('click', function(e) {
-    if (!dropdown.contains(e.target) && !bell.contains(e.target)) {
-      dropdown.classList.remove('show');
-    }
-  });
-  
-  // Prevent closing when clicking inside dropdown
-  dropdown.addEventListener('click', function(e) {
-    e.stopPropagation();
-  });
-}
-
-function setupNextClassCountdown() {
-  const countdownEls = document.querySelectorAll('.next-class-countdown');
-  if (countdownEls.length === 0) return;
-  
-  function updateCountdowns() {
-    countdownEls.forEach(el => {
-      const timeStr = el.getAttribute('data-next-class-time');
-      if (!timeStr) return;
-      
-      const targetTime = new Date(timeStr).getTime();
-      const now = new Date().getTime();
-      const diff = targetTime - now;
-      
-      if (diff <= 0) {
-        el.textContent = "Class has started";
-        el.classList.remove('text-primary');
-        el.classList.add('text-success');
+// ── Load Notifications ──
+function loadNotifications() {
+  fetch('/api/notifications/recent')
+    .then(r => r.json())
+    .then(data => {
+      const list = document.getElementById('notificationList');
+      if (!list) return;
+      if (!data || data.length === 0) {
+        list.innerHTML = `<div class="notif-empty"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><p>You're all caught up!</p></div>`;
         return;
       }
-      
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      
-      if (hours > 0) {
-        el.textContent = `Starts in ${hours}h ${minutes}m`;
-      } else {
-        el.textContent = `Starts in ${minutes} minutes`;
-      }
-    });
-  }
-  
-  updateCountdowns();
-  setInterval(updateCountdowns, 60000); // Update every minute
+      list.innerHTML = data.map(n => `
+        <div class="notification-item ${n.read ? '' : 'unread'}" onclick="markRead(${n.id})">
+          <div class="notif-dot"></div>
+          <div class="notif-content">
+            <div class="notification-title">${n.title}</div>
+            <div class="notification-message">${n.message}</div>
+            <div class="notification-time">${n.timeAgo}</div>
+          </div>
+        </div>`).join('');
+    })
+    .catch(() => {});
 }
 
-function setupClassReminders() {
-  const container = document.querySelector('[data-classes]');
-  if (!container) return;
-  
-  const classesData = container.getAttribute('data-classes');
-  if (!classesData) return;
-  
-  try {
-    const classes = JSON.parse(classesData);
-    const now = new Date();
-    
-    classes.forEach(cls => {
-      const classTime = new Date(cls.startTime);
-      // Only process classes for today
-      if (classTime.toDateString() !== now.toDateString()) return;
-      
-      const timeDiff = classTime.getTime() - now.getTime();
-      // 5 minutes in milliseconds
-      const reminderOffset = 5 * 60 * 1000;
-      
-      if (timeDiff > reminderOffset) {
-        // Set timeout to trigger 5 mins before class
-        setTimeout(() => {
-          showBrowserNotification(
-            "Upcoming Class",
-            `${cls.subject} starts in 5 minutes in ${cls.room}`,
-            "/favicon.ico"
-          );
-        }, timeDiff - reminderOffset);
-      }
-    });
-  } catch (e) {
-    console.error("Error parsing class data for reminders", e);
-  }
+function markRead(id) {
+  fetch(`/api/notifications/${id}/read`, { method: 'POST', headers: { 'X-CSRF-TOKEN': getCsrfToken() } }).catch(() => {});
 }
 
-function setupDeleteConfirmations() {
-  const deleteBtns = document.querySelectorAll('.btn-delete');
-  
-  deleteBtns.forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      const form = this.closest('form');
-      const itemName = this.getAttribute('data-item-name') || 'this item';
-      
-      showModal(
-        'Confirm Deletion',
-        `<p>Are you sure you want to delete ${itemName}? This action cannot be undone.</p>`,
-        function() {
-          if (form) form.submit();
-        }
-      );
+function markAllRead() {
+  fetch('/api/notifications/read-all', { method: 'POST', headers: { 'X-CSRF-TOKEN': getCsrfToken() } })
+    .then(() => { document.querySelectorAll('.notification-item').forEach(el => el.classList.remove('unread')); const badge = document.querySelector('.notif-count'); if (badge) badge.style.display = 'none'; })
+    .catch(() => {});
+}
+
+function getCsrfToken() {
+  const meta = document.querySelector('meta[name="_csrf"]');
+  return meta ? meta.getAttribute('content') : '';
+}
+
+// ── Login Role Selector ──
+function initRoleSelector() {
+  const btns = document.querySelectorAll('.role-btn');
+  const slider = document.querySelector('.role-selector-slider');
+  if (!btns.length || !slider) return;
+
+  const ROLES = { student: { primary: '#14b8a6', soft: 'rgba(20,184,166,0.12)' }, teacher: { primary: '#f59e0b', soft: 'rgba(245,158,11,0.12)' }, admin: { primary: '#f97316', soft: 'rgba(249,115,22,0.12)' } };
+
+  function updateSlider(activeBtn) {
+    const parent = activeBtn.closest('.role-selector');
+    const parentRect = parent.getBoundingClientRect();
+    const btnRect = activeBtn.getBoundingClientRect();
+    slider.style.left = (btnRect.left - parentRect.left) + 'px';
+    slider.style.width = btnRect.width + 'px';
+  }
+
+  function setRole(role) {
+    const colors = ROLES[role];
+    if (!colors) return;
+    document.documentElement.setAttribute('data-role', role);
+    slider.style.background = colors.primary;
+    const input = document.querySelector('input[name="selectedRole"]');
+    if (input) input.value = role;
+  }
+
+  btns.forEach((btn, i) => {
+    btn.addEventListener('click', () => {
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      updateSlider(btn);
+      setRole(btn.getAttribute('data-role'));
     });
+    if (i === 0) { setTimeout(() => { btn.classList.add('active'); updateSlider(btn); setRole(btn.getAttribute('data-role')); }, 50); }
   });
 }
 
-function setupFormValidation() {
-  const forms = document.querySelectorAll('form.needs-validation');
-  
-  forms.forEach(form => {
-    form.addEventListener('submit', function(event) {
-      if (!form.checkValidity()) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-      form.classList.add('was-validated');
-    }, false);
-  });
-}
+// ── Close Dropdowns on Outside Click ──
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.notif-bell-wrap')) {
+    const d = document.getElementById('notificationDropdown');
+    if (d) d.classList.remove('show');
+  }
+  if (!e.target.closest('.sidebar-profile')) {
+    const d = document.getElementById('profileDropdown');
+    if (d) d.classList.remove('show');
+  }
+});
 
-function setupTooltips() {
-  // Mobile touch handling is in mobile.js
-  // Desktop hover is handled purely by CSS (.timetable-cell:hover .cell-tooltip)
-}
-
-function setupAlertDismiss() {
+// ── Auto dismiss flash messages ──
+function initFlashMessages() {
   const alerts = document.querySelectorAll('.alert');
-  
   alerts.forEach(alert => {
-    // If alert has a close button, wait for click, otherwise auto-dismiss
-    const closeBtn = alert.querySelector('.alert-close');
-    
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
-        alert.style.opacity = '0';
-        setTimeout(() => alert.remove(), 300);
-      });
-    } else {
-      setTimeout(() => {
-        alert.style.transition = 'opacity 0.5s ease';
-        alert.style.opacity = '0';
-        setTimeout(() => alert.remove(), 500);
-      }, 5000);
-    }
+    setTimeout(() => { alert.style.opacity = '0'; alert.style.transition = 'opacity 0.5s'; setTimeout(() => alert.remove(), 500); }, 5000);
   });
 }
 
-function setupCascadingFilters() {
-  const deptSelect = document.getElementById('departmentFilter');
-  const yearSelect = document.getElementById('yearFilter');
-  const sectionSelect = document.getElementById('sectionFilter');
-  
-  if (deptSelect && yearSelect) {
-    deptSelect.addEventListener('change', function() {
-      // In a real app, this would be an AJAX call
-      // For now, if value is empty, disable subsequent selects
-      if (!this.value) {
-        yearSelect.value = '';
-        yearSelect.disabled = true;
-        if (sectionSelect) {
-          sectionSelect.value = '';
-          sectionSelect.disabled = true;
-        }
-      } else {
-        yearSelect.disabled = false;
-      }
-    });
-  }
-  
-  if (yearSelect && sectionSelect) {
-    yearSelect.addEventListener('change', function() {
-      if (!this.value) {
-        sectionSelect.value = '';
-        sectionSelect.disabled = true;
-      } else {
-        sectionSelect.disabled = false;
-      }
-    });
-  }
-}
+// ── Init ──
+document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
+  initSidebar();
+  initGreeting();
+  initHeaderDate();
+  initCountdown();
+  initBottomNav();
+  initRoleSelector();
+  initFlashMessages();
 
-// Modal Utility
-function showModal(title, bodyHtml, onConfirm) {
-  // Remove existing modal if any
-  let existingModal = document.getElementById('dynamicModal');
-  if (existingModal) {
-    existingModal.remove();
-  }
-  
-  const modalHtml = `
-    <div class="modal-overlay show" id="dynamicModal">
-      <div class="modal">
-        <div class="modal-header">
-          <h3 style="margin:0">${title}</h3>
-          <button class="modal-close" onclick="closeModal()">&times;</button>
-        </div>
-        <div class="modal-body">
-          ${bodyHtml}
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-          <button class="btn btn-danger" id="modalConfirmBtn">Confirm</button>
-        </div>
-      </div>
-    </div>
-  `;
-  
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
-  
-  document.getElementById('modalConfirmBtn').addEventListener('click', function() {
-    if (typeof onConfirm === 'function') {
-      onConfirm();
-    }
-    closeModal();
-  });
-  
-  // Close on overlay click
-  document.getElementById('dynamicModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-      closeModal();
-    }
-  });
-}
+  // Sidebar overlay click to close
+  const overlay = document.querySelector('.sidebar-overlay');
+  if (overlay) overlay.addEventListener('click', closeSidebarMobile);
+});
 
-function closeModal() {
-  const modal = document.getElementById('dynamicModal');
-  if (modal) {
-    modal.classList.remove('show');
-    setTimeout(() => modal.remove(), 300); // Wait for potential animation
-  }
-}
-
-function showBrowserNotification(title, body, icon) {
-  if (!('Notification' in window)) return;
-  
-  if (Notification.permission === 'granted') {
-    new Notification(title, { body, icon });
-  } else if (Notification.permission !== 'denied') {
-    Notification.requestPermission().then(permission => {
-      if (permission === 'granted') {
-        new Notification(title, { body, icon });
-      }
-    });
-  }
-}
-
-function formatTimeAgo(dateStr) {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const seconds = Math.floor((now - date) / 1000);
-  
-  let interval = seconds / 31536000;
-  if (interval > 1) return Math.floor(interval) + " years ago";
-  
-  interval = seconds / 2592000;
-  if (interval > 1) return Math.floor(interval) + " months ago";
-  
-  interval = seconds / 86400;
-  if (interval > 1) return Math.floor(interval) + " days ago";
-  
-  interval = seconds / 3600;
-  if (interval > 1) return Math.floor(interval) + " hours ago";
-  
-  interval = seconds / 60;
-  if (interval > 1) return Math.floor(interval) + " minutes ago";
-  
-  return Math.floor(seconds) + " seconds ago";
-}
+window.toggleSidebar = toggleSidebar;
+window.toggleTheme = toggleTheme;
+window.toggleProfileDropdown = toggleProfileDropdown;
+window.toggleNotificationDropdown = toggleNotificationDropdown;
+window.markAllRead = markAllRead;
+window.markRead = markRead;
+window.showToast = showToast;
