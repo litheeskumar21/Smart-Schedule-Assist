@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Timetable | Smart Schedule Assist</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive.css}">
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar" th:replace="~{fragments/sidebar :: sidebar('timetables')}"></aside>
+    <main class="main-content">
+        <header class="header" th:replace="~{fragments/header :: header('Interactive Timetable Editor')}"></header>
+
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+        <!-- Generation Result Banner if present -->
+        <div th:if="${generationResult != null}" class="alert alert-info" style="margin-bottom: 20px;">
+            <div style="font-weight: 700; margin-bottom: 4px;">⚡ Generation Algorithm Results:</div>
+            <ul style="margin-left: 20px;">
+                <li th:each="msg : ${generationResult.messages}" th:text="${msg}">Message</li>
+            </ul>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="card mb-24 flex-between flex-center" style="flex-wrap: wrap; gap: 16px;">
+            <div>
+                <h1 class="page-title" style="margin-bottom: 0;" th:text="${'Editing: ' + section.displayName}">Section CSE-A</h1>
+                <p class="text-muted" style="margin-top: 4px;">Department: <span th:text="${section.department != null ? section.department.name : '-'}">CSE</span> | Year: <span th:text="${section.academicYear != null ? section.academicYear.label : '-'}">2nd Year</span></p>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <form th:action="@{/admin/timetables/generate}" method="post" style="display: inline;" onsubmit="return confirm('Generate / Regenerate automatic timetable? Non-locked slots will be rescheduled.');">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <input type="hidden" name="sectionId" th:value="${section.id}"/>
+                    <button type="submit" class="btn btn-warning btn-sm">⚡ Auto-Generate Schedule</button>
+                </form>
+
+                <form th:action="@{'/admin/timetables/publish/' + ${section.id}}" method="post" style="display: inline;" onsubmit="return confirm('Publish this timetable? Students and faculty will see the changes.');">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit" class="btn btn-primary btn-sm">🚀 Publish to Students & Teachers</button>
+                </form>
+
+                <a th:href="@{'/admin/timetables?sectionId=' + ${section.id}}" class="btn btn-secondary btn-sm">← Back to Overview</a>
+            </div>
+        </div>
+
+        <!-- Editable Grid -->
+        <div class="card">
+            <div class="card-header flex-between flex-center">
+                <span class="card-title">📋 Schedule Grid (Click any slot to edit or toggle lock)</span>
+                <span class="text-muted" style="font-size: 13px;">🔒 Locked slots are preserved during auto-generation</span>
+            </div>
+
+            <div style="overflow-x: auto; margin-top: 16px;">
+                <table class="timetable-table">
+                    <thead>
+                    <tr>
+                        <th style="width: 14%;">Period / Time</th>
+                        <th style="width: 17.2%;">Monday</th>
+                        <th style="width: 17.2%;">Tuesday</th>
+                        <th style="width: 17.2%;">Wednesday</th>
+                        <th style="width: 17.2%;">Thursday</th>
+                        <th style="width: 17.2%;">Friday</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="period : ${allPeriods}">
+                        <td style="background-color: #f8f9fa; font-weight: 600; text-align: center; vertical-align: middle;">
+                            <span th:text="${'Period ' + period.periodNumber}">Period 1</span><br>
+                            <span style="font-size: 11px; font-weight: normal; color: var(--text-secondary);"
+                                  th:text="${#temporals.format(period.startTime, 'hh:mm a') + ' - ' + #temporals.format(period.endTime, 'hh:mm a')}">09:00 - 09:50</span>
+                        </td>
+
+                        <td th:if="${period.type.name() == 'BREAK'}" colspan="5" class="cell-break">
+                            ☕ Short Break
+                        </td>
+
+                        <td th:if="${period.type.name() == 'LUNCH'}" colspan="5" class="cell-lunch" style="font-weight: 600; color: var(--warning);">
+                            🍱 Lunch Break
+                        </td>
+
+                        <td th:if="${period.type.name() == 'CLASS'}" th:each="day : ${T(java.time.DayOfWeek).values()}" th:if="${day.value <= 5}">
+                            <div th:with="matchingEntries=${entries.?[dayOfWeek == #root.day && period.id == #root.period.id]}">
+                                <div th:if="${!matchingEntries.isEmpty() && matchingEntries[0].subject != null}"
+                                     class="timetable-cell"
+                                     style="position: relative;"
+                                     th:classappend="${matchingEntries[0].locked ? 'cell-locked' : ''}">
+                                    <div class="flex-between flex-center">
+                                        <div class="cell-subject" th:text="${matchingEntries[0].subject.name}">Data Structures</div>
+                                        <button th:onclick="'toggleLockSlot(' + ${matchingEntries[0].id} + ')'"
+                                                style="background: none; border: none; cursor: pointer; font-size: 12px;"
+                                                th:title="${matchingEntries[0].locked ? 'Unlock slot' : 'Lock slot'}">
+                                            <span th:text="${matchingEntries[0].locked ? '🔒' : '🔓'}">🔓</span>
+                                        </button>
+                                    </div>
+                                    <div class="cell-teacher text-muted" th:if="${matchingEntries[0].teacher != null}" th:text="${matchingEntries[0].teacher.user.fullName}">Prof. Name</div>
+                                    <div class="cell-room text-muted" th:if="${matchingEntries[0].classroom != null}">📍 <span th:text="${matchingEntries[0].classroom.name}">Room 101</span></div>
+                                    <div class="mt-8">
+                                        <button class="btn btn-secondary btn-sm" style="padding: 2px 6px; font-size: 11px;"
+                                                th:onclick="'openEditModal(' + ${matchingEntries[0].id} + ', \'' + ${day.name()} + '\', ' + ${period.id} + ', ' + ${matchingEntries[0].subject.id} + ', ' + (${matchingEntries[0].teacher != null ? matchingEntries[0].teacher.id : 'null'}) + ', ' + (${matchingEntries[0].classroom != null ? matchingEntries[0].classroom.id : 'null'}) + ')'">
+                                            Edit
+                                        </button>
+                                    </div>
+                                </div>
+                                <div th:if="${matchingEntries.isEmpty() || matchingEntries[0].subject == null}" class="cell-free" style="padding: 12px; text-align: center;">
+                                    <span class="text-muted" style="font-size: 12px;">FREE</span><br>
+                                    <button class="btn btn-secondary btn-sm mt-8" style="padding: 2px 6px; font-size: 11px;"
+                                            th:onclick="'openCreateModal(\'' + ${day.name()} + '\', ' + ${period.id} + ')'">
+                                        + Assign
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Edit Slot Modal -->
+        <div id="slotModal" class="modal-overlay">
+            <div class="modal">
+                <div class="modal-header">
+                    <span id="modalTitle">Edit Timetable Slot</span>
+                    <button onclick="closeModal()" style="background:none; border:none; font-size: 20px; cursor: pointer;">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="slotForm">
+                        <input type="hidden" id="modalEntryId">
+                        <input type="hidden" id="modalDayOfWeek">
+                        <input type="hidden" id="modalPeriodId">
+                        <input type="hidden" id="modalSectionId" th:value="${section.id}">
+
+                        <div class="form-group">
+                            <label class="form-label">Subject</label>
+                            <select id="modalSubjectId" class="form-control form-select" required>
+                                <option value="">-- Clear / Free Slot --</option>
+                                <option th:each="sub : ${subjects}" th:value="${sub.id}" th:text="${sub.code + ' - ' + sub.name}">CS201</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Teacher</label>
+                            <select id="modalTeacherId" class="form-control form-select">
+                                <option value="">-- No Teacher Assigned --</option>
+                                <option th:each="t : ${teachers}" th:value="${t.id}" th:text="${t.user.fullName + ' (' + t.teacherId + ')'}">Dr. Kumar</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Classroom / Lab</label>
+                            <select id="modalClassroomId" class="form-control form-select">
+                                <option value="">-- No Room Assigned --</option>
+                                <option th:each="r : ${classrooms}" th:value="${r.id}" th:text="${r.name + ' (' + r.roomType + ')'}">Room 101</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSlot()">Save Slot</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+<script th:src="@{/js/notifications.js}"></script>
+<script th:src="@{/js/mobile.js}"></script>
+<script>
+    function toggleLockSlot(entryId) {
+        fetch('/admin/timetables/lock?entryId=' + entryId, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]')?.content || ''
+            }
+        }).then(() => location.reload());
+    }
+
+    function openEditModal(id, day, periodId, subjectId, teacherId, classroomId) {
+        document.getElementById('modalTitle').innerText = 'Edit Timetable Slot (' + day + ')';
+        document.getElementById('modalEntryId').value = id || '';
+        document.getElementById('modalDayOfWeek').value = day;
+        document.getElementById('modalPeriodId').value = periodId;
+        document.getElementById('modalSubjectId').value = subjectId || '';
+        document.getElementById('modalTeacherId').value = teacherId || '';
+        document.getElementById('modalClassroomId').value = classroomId || '';
+        document.getElementById('slotModal').style.display = 'flex';
+    }
+
+    function openCreateModal(day, periodId) {
+        document.getElementById('modalTitle').innerText = 'Assign Class to ' + day;
+        document.getElementById('modalEntryId').value = '';
+        document.getElementById('modalDayOfWeek').value = day;
+        document.getElementById('modalPeriodId').value = periodId;
+        document.getElementById('modalSubjectId').value = '';
+        document.getElementById('modalTeacherId').value = '';
+        document.getElementById('modalClassroomId').value = '';
+        document.getElementById('slotModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('slotModal').style.display = 'none';
+    }
+
+    function saveSlot() {
+        const payload = {
+            id: document.getElementById('modalEntryId').value || null,
+            sectionId: document.getElementById('modalSectionId').value,
+            dayOfWeek: document.getElementById('modalDayOfWeek').value,
+            periodId: document.getElementById('modalPeriodId').value,
+            subjectId: document.getElementById('modalSubjectId').value || null,
+            teacherId: document.getElementById('modalTeacherId').value || null,
+            classroomId: document.getElementById('modalClassroomId').value || null,
+            status: 'ACTIVE'
+        };
+
+        fetch('/admin/timetables/save-entry', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]')?.content || ''
+            },
+            body: JSON.stringify(payload)
+        }).then(res => res.json())
+          .then(data => {
+              closeModal();
+              location.reload();
+          });
+    }
+</script>
+</body>
+</html>

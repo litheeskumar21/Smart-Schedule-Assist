@@ -1,0 +1,44 @@
+<aside class="sidebar" th:fragment="sidebar(activeMenu)" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+  <div class="sidebar-header">
+    <h2>📅 Smart Schedule</h2>
+  </div>
+  <nav class="sidebar-nav">
+    <div sec:authorize="hasRole('STUDENT')">
+      <a th:href="@{/student/dashboard}" th:classappend="${activeMenu == 'dashboard'} ? 'active'" class="nav-item">📊 Dashboard</a>
+      <a th:href="@{/student/timetable}" th:classappend="${activeMenu == 'timetable'} ? 'active'" class="nav-item">📋 Timetable</a>
+      <a th:href="@{/student/notifications}" th:classappend="${activeMenu == 'notifications'} ? 'active'" class="nav-item">🔔 Notifications</a>
+      <a th:href="@{/student/announcements}" th:classappend="${activeMenu == 'announcements'} ? 'active'" class="nav-item">📢 Announcements</a>
+      <a th:href="@{/student/profile}" th:classappend="${activeMenu == 'profile'} ? 'active'" class="nav-item">👤 Profile</a>
+    </div>
+    <div sec:authorize="hasRole('TEACHER')">
+      <a th:href="@{/teacher/dashboard}" th:classappend="${activeMenu == 'dashboard'} ? 'active'" class="nav-item">📊 Dashboard</a>
+      <a th:href="@{/teacher/timetable}" th:classappend="${activeMenu == 'timetable'} ? 'active'" class="nav-item">📋 Timetable</a>
+      <a th:href="@{/teacher/absence}" th:classappend="${activeMenu == 'absence'} ? 'active'" class="nav-item">📝 Absence Requests</a>
+      <a th:href="@{/teacher/change-requests}" th:classappend="${activeMenu == 'change-requests'} ? 'active'" class="nav-item">🔄 Change Requests</a>
+      <a th:href="@{/teacher/notifications}" th:classappend="${activeMenu == 'notifications'} ? 'active'" class="nav-item">🔔 Notifications</a>
+      <a th:href="@{/teacher/profile}" th:classappend="${activeMenu == 'profile'} ? 'active'" class="nav-item">👤 Profile</a>
+    </div>
+    <div sec:authorize="hasRole('ADMIN')">
+      <a th:href="@{/admin/dashboard}" th:classappend="${activeMenu == 'dashboard'} ? 'active'" class="nav-item">📊 Dashboard</a>
+      <a th:href="@{/admin/timetables}" th:classappend="${activeMenu == 'timetables'} ? 'active'" class="nav-item">📋 Timetables</a>
+      <a th:href="@{/admin/students}" th:classappend="${activeMenu == 'students'} ? 'active'" class="nav-item">🎓 Students</a>
+      <a th:href="@{/admin/teachers}" th:classappend="${activeMenu == 'teachers'} ? 'active'" class="nav-item">👨‍🏫 Teachers</a>
+      <a th:href="@{/admin/departments}" th:classappend="${activeMenu == 'departments'} ? 'active'" class="nav-item">🏢 Departments</a>
+      <a th:href="@{/admin/sections}" th:classappend="${activeMenu == 'sections'} ? 'active'" class="nav-item">📚 Sections</a>
+      <a th:href="@{/admin/subjects}" th:classappend="${activeMenu == 'subjects'} ? 'active'" class="nav-item">📖 Subjects</a>
+      <a th:href="@{/admin/classrooms}" th:classappend="${activeMenu == 'classrooms'} ? 'active'" class="nav-item">🏫 Classrooms</a>
+      <a th:href="@{/admin/absence-requests}" th:classappend="${activeMenu == 'absence-requests'} ? 'active'" class="nav-item">📝 Absence Requests</a>
+      <a th:href="@{/admin/timetable-requests}" th:classappend="${activeMenu == 'timetable-requests'} ? 'active'" class="nav-item">🔄 Timetable Requests</a>
+      <a th:href="@{/admin/announcements}" th:classappend="${activeMenu == 'announcements'} ? 'active'" class="nav-item">📢 Announcements</a>
+      <a th:href="@{/admin/notifications}" th:classappend="${activeMenu == 'notifications'} ? 'active'" class="nav-item">🔔 Notifications</a>
+      <a th:href="@{/admin/settings}" th:classappend="${activeMenu == 'settings'} ? 'active'" class="nav-item">⚙️ Settings</a>
+      <a th:href="@{/admin/activity-log}" th:classappend="${activeMenu == 'activity-log'} ? 'active'" class="nav-item">📋 Activity Log</a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <form th:action="@{/logout}" method="post">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button type="submit" class="nav-item logout-btn">🚪 Logout</button>
+    </form>
+  </div>
+</aside>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absence Requests | Smart Schedule Assist</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive.css}">
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar" th:replace="~{fragments/sidebar :: sidebar('absence')}"></aside>
+    <main class="main-content">
+        <header class="header" th:replace="~{fragments/header :: header('Absence Requests')}"></header>
+
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+        <!-- Submit Absence Request Form Card -->
+        <div class="card mb-24">
+            <div class="card-header">
+                <span class="card-title">📝 Submit New Absence / Leave Request</span>
+            </div>
+
+            <form th:action="@{/teacher/absence}" method="post" style="margin-top: 16px;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Absence Date *</label>
+                        <input type="date" name="absenceDate" class="form-control" required th:min="${#temporals.format(T(java.time.LocalDate).now(), 'yyyy-MM-dd')}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Absence Scope *</label>
+                        <select name="absenceType" id="absenceType" class="form-control form-select" required onchange="togglePeriodSelection()">
+                            <option value="FULL_DAY">Entire Working Day</option>
+                            <option value="SPECIFIC_PERIODS">Specific Periods Only</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="periodSelectionDiv" class="form-group" style="display: none;">
+                    <label class="form-label">Select Affected Periods *</label>
+                    <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 6px;">
+                        <label th:each="p : ${allPeriods}" style="display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer;">
+                            <input type="checkbox" name="periodIds" th:value="${p.id}">
+                            <span th:text="${'Period ' + p.periodNumber + ' (' + #temporals.format(p.startTime, 'HH:mm') + ')'}">Period 1</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Suggested Substitute Teacher (Optional)</label>
+                        <select name="suggestedSubstituteId" class="form-control form-select">
+                            <option value="">-- No Preference (Admin will assign) --</option>
+                            <option th:each="t : ${allTeachers}" th:if="${t.id != teacher.id}" th:value="${t.id}" th:text="${t.user.fullName + ' (' + t.teacherId + ')'}">Teacher</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Reason for Absence *</label>
+                        <input type="text" name="reason" class="form-control" required placeholder="e.g., Medical Emergency, Conference, Personal Leave">
+                    </div>
+                </div>
+
+                <div class="mt-16">
+                    <button type="submit" class="btn btn-primary">Submit Absence Request</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Past Absence Requests Table -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">📋 My Past & Pending Absence Requests</span>
+            </div>
+
+            <div class="empty-state" th:if="${absenceRequests.isEmpty()}">
+                <div class="empty-icon">📝</div>
+                <div class="empty-text">You have not submitted any absence requests yet.</div>
+            </div>
+
+            <div style="overflow-x: auto; margin-top: 12px;" th:if="${!absenceRequests.isEmpty()}">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Date of Absence</th>
+                        <th>Type</th>
+                        <th>Reason</th>
+                        <th>Suggested Sub</th>
+                        <th>Status</th>
+                        <th>Admin Comment</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="req : ${absenceRequests}">
+                        <td><strong th:text="${#temporals.format(req.absenceDate, 'MMM dd, yyyy (EEEE)')}">Oct 10, 2026</strong></td>
+                        <td th:text="${req.absenceType == T(com.smartschedule.model.enums.AbsenceType).FULL_DAY ? 'Full Day' : 'Specific Periods'}">Full Day</td>
+                        <td th:text="${req.reason}">Reason</td>
+                        <td th:text="${req.suggestedSubstitute != null ? req.suggestedSubstitute.user.fullName : '-'}">-</td>
+                        <td>
+                            <span th:if="${req.status.name() == 'PENDING'}" class="badge badge-pending">Pending Review</span>
+                            <span th:if="${req.status.name() == 'APPROVED'}" class="badge badge-approved">Approved</span>
+                            <span th:if="${req.status.name() == 'REJECTED'}" class="badge badge-rejected">Rejected</span>
+                            <span th:if="${req.status.name() == 'WITHDRAWN'}" class="badge badge-withdrawn">Withdrawn</span>
+                        </td>
+                        <td th:text="${req.adminComment != null && !req.adminComment.isEmpty() ? req.adminComment : '-'}">-</td>
+                        <td>
+                            <form th:if="${req.status.name() == 'PENDING'}" th:action="@{'/teacher/absence/' + ${req.id} + '/withdraw'}" method="post" style="display: inline;" onsubmit="return confirm('Withdraw this absence request?');">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <button type="submit" class="btn btn-danger btn-sm">Withdraw</button>
+                            </form>
+                            <span th:if="${req.status.name() != 'PENDING'}">-</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+<script th:src="@{/js/notifications.js}"></script>
+<script th:src="@{/js/mobile.js}"></script>
+<script>
+    function togglePeriodSelection() {
+        const type = document.getElementById('absenceType').value;
+        document.getElementById('periodSelectionDiv').style.display = (type === 'SPECIFIC_PERIODS') ? 'block' : 'none';
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${pageTitle} + ' | Smart Schedule Assist'">Smart Schedule Assist</title>
+  <link rel="stylesheet" th:href="@{/css/main.css}">
+  <link rel="stylesheet" th:href="@{/css/responsive.css}">
+  <link rel="stylesheet" th:href="@{/css/print.css}" media="print">
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" th:fragment="sidebar">
+        <!-- Replaced by actual sidebar -->
+    </aside>
+    <main class="main-content">
+        <header class="header" th:fragment="header">
+            <!-- Replaced by actual header -->
+        </header>
+        <div th:replace="${content}"></div>
+    </main>
+  </div>
+</body>
+</html>

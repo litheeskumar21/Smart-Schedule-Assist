@@ -1,0 +1,4 @@
+Teacher ID,Full Name,Email,Password,Phone,Department Codes
+T101,Dr. Alan Turing,alan@smartschedule.edu,teacher123,9876543210,"CSE,ECE"
+T102,Prof. Grace Hopper,grace@smartschedule.edu,teacher123,9876543211,CSE
+T103,Dr. Claude Shannon,claude@smartschedule.edu,teacher123,9876543212,EEE

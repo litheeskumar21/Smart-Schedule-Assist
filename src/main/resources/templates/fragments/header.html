@@ -1,0 +1,16 @@
+<header class="header" th:fragment="header(pageTitle)" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+  <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+  <div class="header-title" th:text="${pageTitle}">Page Title</div>
+  <div class="header-right">
+    <div class="notification-bell" onclick="toggleNotificationDropdown()">
+      🔔
+      <span class="notification-badge" th:text="${unreadCount}" th:if="${unreadCount != null && unreadCount > 0}">0</span>
+    </div>
+    <div class="header-user">
+      <span sec:authentication="name">User</span>
+    </div>
+    <div class="notification-dropdown" id="notificationDropdown" style="display:none">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+</header>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${isEdit ? 'Edit Announcement' : 'Publish Announcement'} + ' | Smart Schedule Assist'">Announcement Form</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive.css}">
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar" th:replace="~{fragments/sidebar :: sidebar('announcements')}"></aside>
+    <main class="main-content">
+        <header class="header" th:replace="~{fragments/header :: header(${isEdit ? 'Edit Announcement' : 'New Announcement'})}"></header>
+
+        <div class="card" style="max-width: 700px;">
+            <div class="card-header">
+                <span class="card-title" th:text="${isEdit ? '✏️ Edit Announcement' : '📢 Broadcast New Announcement'}">Announcement Form</span>
+            </div>
+
+            <form th:action="${isEdit} ? @{'/admin/announcements/edit/' + ${announcement.id}} : @{/admin/announcements/create}" method="post" style="margin-top: 16px;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <div class="form-group">
+                    <label class="form-label">Announcement Title *</label>
+                    <input type="text" name="title" class="form-control" required placeholder="e.g., Mid-Term Examination Schedule Released"
+                           th:value="${announcement.title}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Target Audience *</label>
+                    <select name="targetType" id="targetType" class="form-control form-select" required onchange="handleTargetTypeChange()">
+                        <option th:each="tt : ${targetTypes}" th:value="${tt.name()}" th:text="${tt.name()}"
+                                th:selected="${announcement.targetType == tt}">EVERYONE</option>
+                    </select>
+                </div>
+
+                <!-- Department Selector if TARGET is DEPARTMENT -->
+                <div id="deptTargetDiv" class="form-group" style="display: none;">
+                    <label class="form-label">Select Target Department</label>
+                    <select name="targetIds" class="form-control form-select">
+                        <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name + ' (' + d.code + ')'}">CSE</option>
+                    </select>
+                </div>
+
+                <!-- Section Selector if TARGET is SECTION -->
+                <div id="secTargetDiv" class="form-group" style="display: none;">
+                    <label class="form-label">Select Target Section</label>
+                    <select name="targetIds" class="form-control form-select">
+                        <option th:each="sec : ${sections}" th:value="${sec.id}" th:text="${sec.displayName}">CSE-A</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Announcement Content / Message *</label>
+                    <textarea name="content" class="form-control" rows="5" required placeholder="Write detailed notice here..."
+                              th:text="${announcement.content}"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button type="submit" class="btn btn-primary" th:text="${isEdit ? 'Update Announcement' : 'Publish Announcement'}">Publish</button>
+                    <a th:href="@{/admin/announcements}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+<script th:src="@{/js/notifications.js}"></script>
+<script th:src="@{/js/mobile.js}"></script>
+<script>
+    function handleTargetTypeChange() {
+        const type = document.getElementById('targetType').value;
+        document.getElementById('deptTargetDiv').style.display = (type === 'DEPARTMENT') ? 'block' : 'none';
+        document.getElementById('secTargetDiv').style.display = (type === 'SECTION') ? 'block' : 'none';
+    }
+</script>
+</body>
+</html>

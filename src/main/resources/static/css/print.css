@@ -1,0 +1,117 @@
+@media print {
+  /* Hide unnecessary elements */
+  .sidebar,
+  .header,
+  .mobile-menu-btn,
+  .btn,
+  .form-group,
+  .filter-bar,
+  .pagination,
+  .day-tabs,
+  .breadcrumb,
+  .notification-dropdown {
+    display: none !important;
+  }
+
+  /* Reset layout for printing */
+  .app-layout,
+  .main-content,
+  .content-wrapper {
+    display: block;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    min-height: auto !important;
+    background-color: white !important;
+  }
+
+  body {
+    background-color: white !important;
+    color: black !important;
+    font-size: 12pt;
+  }
+
+  /* Remove shadows and borders for cleaner look */
+  .card {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin-bottom: 20px !important;
+  }
+
+  .card-header {
+    border-bottom: 2px solid #000 !important;
+    padding-bottom: 10px !important;
+  }
+
+  /* Ensure timetable prints well */
+  .timetable-table {
+    width: 100% !important;
+    display: table !important;
+  }
+  
+  .timetable-cards {
+    display: none !important; /* Never show mobile view when printing */
+  }
+
+  .timetable-table th,
+  .timetable-table td {
+    border: 1px solid #000 !important;
+    padding: 6px !important;
+    background-color: transparent !important;
+    color: black !important;
+  }
+
+  .timetable-table th {
+    background-color: #f0f0f0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Force color printing for status badges if supported */
+  .badge {
+    border: 1px solid #ccc;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Page breaks */
+  h1, h2, h3, .card-title {
+    page-break-after: avoid;
+  }
+
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  .timetable-cell {
+    page-break-inside: avoid;
+    min-height: auto !important;
+    padding: 4px !important;
+  }
+
+  /* Remove link URLs */
+  a {
+    text-decoration: none !important;
+    color: black !important;
+  }
+
+  a[href]::after {
+    content: none !important;
+  }
+  
+  /* Print Title */
+  body::before {
+    content: "Smart Schedule Assist Document";
+    display: block;
+    text-align: center;
+    font-size: 18pt;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+}
