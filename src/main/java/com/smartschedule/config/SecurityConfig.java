@@ -1,6 +1,6 @@
 package com.smartschedule.config;
 
-import com.smartschedule.security.CustomUserDetailsService;
+import com.smartschedule.security.CustomAuthenticationProvider;
 import com.smartschedule.security.LoginSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,14 +15,17 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 public class SecurityConfig {
 
     private final LoginSuccessHandler loginSuccessHandler;
+    private final CustomAuthenticationProvider customAuthenticationProvider;
 
-    public SecurityConfig(LoginSuccessHandler loginSuccessHandler) {
+    public SecurityConfig(LoginSuccessHandler loginSuccessHandler, CustomAuthenticationProvider customAuthenticationProvider) {
         this.loginSuccessHandler = loginSuccessHandler;
+        this.customAuthenticationProvider = customAuthenticationProvider;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .authenticationProvider(customAuthenticationProvider)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/login", "/forgot-password", "/reset-password", "/css/**", "/js/**", "/images/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -49,7 +52,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
+    public static BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }

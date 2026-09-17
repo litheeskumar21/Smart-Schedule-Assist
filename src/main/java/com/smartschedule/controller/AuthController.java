@@ -3,6 +3,9 @@ package com.smartschedule.controller;
 import com.smartschedule.model.User;
 import com.smartschedule.repository.UserRepository;
 import com.smartschedule.service.PasswordResetService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,9 +27,18 @@ public class AuthController {
     @GetMapping("/login")
     public String login(@RequestParam(value = "error", required = false) String error,
                         @RequestParam(value = "logout", required = false) String logout,
+                        HttpServletRequest request,
                         Model model) {
         if (error != null) {
-            model.addAttribute("errorMessage", "Invalid ID/Username or Password. Please try again.");
+            String errorMessage = "Invalid ID/Username or Password. Please try again.";
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Object lastException = session.getAttribute("SPRING_SECURITY_LAST_EXCEPTION");
+                if (lastException instanceof AuthenticationException authEx && authEx.getMessage() != null && !authEx.getMessage().isBlank()) {
+                    errorMessage = authEx.getMessage();
+                }
+            }
+            model.addAttribute("errorMessage", errorMessage);
         }
         if (logout != null) {
             model.addAttribute("successMessage", "You have been logged out successfully.");
