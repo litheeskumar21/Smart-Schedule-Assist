@@ -7,7 +7,7 @@ const SIDEBAR_KEY = 'ssa-sidebar-collapsed';
 function initTheme() {
   const saved = localStorage.getItem(THEME_KEY) || 'light';
   document.documentElement.setAttribute('data-theme', saved);
-  updateThemeIcon(saved);
+  _applyThemeIcons(saved);
 }
 
 function toggleTheme() {
@@ -15,16 +15,19 @@ function toggleTheme() {
   const next = current === 'light' ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem(THEME_KEY, next);
-  updateThemeIcon(next);
+  _applyThemeIcons(next);
 }
 
-function updateThemeIcon(theme) {
-  const btn = document.getElementById('themeToggleBtn');
-  if (!btn) return;
-  btn.innerHTML = theme === 'dark'
-    ? `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`
-    : `<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+// Swap the two pre-rendered SVG icon elements inside the theme button
+function _applyThemeIcons(theme) {
+  const sun  = document.getElementById('iconSun');
+  const moon = document.getElementById('iconMoon');
+  if (sun)  sun.style.display  = (theme === 'dark')  ? 'none'  : 'block';
+  if (moon) moon.style.display = (theme === 'dark')  ? 'block' : 'none';
 }
+
+// Legacy alias kept for safety
+function updateThemeIcon(theme) { _applyThemeIcons(theme); }
 
 // ── Sidebar Collapse ──
 function initSidebar() {
@@ -70,10 +73,10 @@ function toggleProfileDropdown() {
 // ── Notification Dropdown ──
 function toggleNotificationDropdown() {
   const dropdown = document.getElementById('notificationDropdown');
-  if (dropdown) dropdown.classList.toggle('show');
-  if (dropdown && dropdown.classList.contains('show')) {
-    loadNotifications();
-  }
+  if (!dropdown) return;
+  const isOpen = dropdown.style.display === 'block';
+  dropdown.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) loadNotifications();
 }
 
 // ── Header Greeting ──
@@ -156,20 +159,38 @@ function loadNotifications() {
       const list = document.getElementById('notificationList');
       if (!list) return;
       if (!data || data.length === 0) {
-        list.innerHTML = `<div class="notif-empty"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><p>You're all caught up!</p></div>`;
+        list.innerHTML = `
+          <div style="padding:28px 16px;text-align:center;color:var(--text-muted);">
+            <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="1.5" fill="none"
+                 style="margin:0 auto 8px;display:block;opacity:0.4;">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <div style="font-size:13px;">You're all caught up!</div>
+          </div>`;
         return;
       }
       list.innerHTML = data.map(n => `
-        <div class="notification-item ${n.read ? '' : 'unread'}" onclick="markRead(${n.id})">
-          <div class="notif-dot"></div>
-          <div class="notif-content">
-            <div class="notification-title">${n.title}</div>
-            <div class="notification-message">${n.message}</div>
-            <div class="notification-time">${n.timeAgo}</div>
+        <div onclick="markRead(${n.id})"
+             style="padding:12px 16px;display:flex;gap:10px;align-items:flex-start;
+                    cursor:pointer;border-bottom:1px solid var(--border);
+                    background:${n.read ? 'transparent' : 'rgba(var(--role-primary-rgb,20,184,166),0.06)'};
+                    transition:background 0.15s;">
+          <div style="width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;
+                      background:${n.read ? 'transparent' : 'var(--role-primary,#14b8a6)'};"></div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:${n.read ? 400 : 600};color:var(--text);
+                        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${n.title || ''}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;
+                        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${n.message || ''}</div>
+            <div style="font-size:11px;color:var(--text-placeholder);margin-top:4px;">${n.timeAgo || ''}</div>
           </div>
         </div>`).join('');
     })
-    .catch(() => {});
+    .catch(() => {
+      const list = document.getElementById('notificationList');
+      if (list) list.innerHTML = `<div style="padding:20px 16px;text-align:center;font-size:13px;color:var(--text-muted);">Could not load notifications.</div>`;
+    });
 }
 
 function markRead(id) {
@@ -227,7 +248,7 @@ function initRoleSelector() {
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.notif-bell-wrap')) {
     const d = document.getElementById('notificationDropdown');
-    if (d) d.classList.remove('show');
+    if (d) d.style.display = 'none';
   }
   if (!e.target.closest('.sidebar-profile')) {
     const d = document.getElementById('profileDropdown');
