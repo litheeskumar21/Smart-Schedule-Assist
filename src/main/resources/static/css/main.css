@@ -133,6 +133,37 @@ button { font-family: inherit; }
 .sidebar.collapsed .nav-label { opacity: 0; pointer-events: none; }
 .sidebar.collapsed .nav-item { justify-content: center; padding: 10px; }
 
+.nav-logout-btn {
+  width: calc(100% - 16px) !important;
+  color: #ef4444 !important;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: all var(--transition-fast);
+}
+.nav-logout-btn:hover {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  color: #f87171 !important;
+}
+.nav-logout-btn .nav-icon svg {
+  stroke: #ef4444;
+  transition: stroke var(--transition-fast);
+}
+.nav-logout-btn:hover .nav-icon svg {
+  stroke: #f87171;
+}
+.nav-logout-btn .nav-label {
+  color: #ef4444 !important;
+  font-weight: 600;
+  transition: color var(--transition-fast);
+}
+.nav-logout-btn:hover .nav-label {
+  color: #f87171 !important;
+}
+
 .sidebar-profile { padding: 10px 8px; border-top: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; position: relative; }
 .profile-btn {
   display: flex; align-items: center; gap: 10px; width: 100%;
