@@ -47,7 +47,7 @@
                     </div>
                     <div class="stat-card">
                         <div class="stat-label">Scope of Leave</div>
-                        <div class="stat-value" th:text="${request.absenceType == T(com.smartschedule.model.enums.AbsenceType).FULL_DAY ? 'Entire Working Day' : 'Specific Periods'}">Full Day</div>
+                        <div class="stat-value" th:text="${request.absenceType != null and request.absenceType.name() == 'FULL_DAY' ? 'Entire Working Day' : 'Specific Periods'}">Full Day</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-label">Reason</div>

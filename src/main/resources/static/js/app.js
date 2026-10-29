@@ -10,6 +10,12 @@ function initTheme() {
   _applyThemeIcons(saved);
 }
 
+// Immediately apply theme on script load
+try {
+  const _savedTheme = localStorage.getItem(THEME_KEY) || 'light';
+  document.documentElement.setAttribute('data-theme', _savedTheme);
+} catch (e) {}
+
 function toggleTheme() {
   const current = document.documentElement.getAttribute('data-theme') || 'light';
   const next = current === 'light' ? 'dark' : 'light';
@@ -29,15 +35,52 @@ function _applyThemeIcons(theme) {
 // Legacy alias kept for safety
 function updateThemeIcon(theme) { _applyThemeIcons(theme); }
 
-// ── Sidebar Collapse ──
+// ── Sidebar Collapse & Animation ──
+function updateSidebarButtonState(isCollapsed) {
+  const btn = document.getElementById('sidebarToggleBtn');
+  if (!btn) return;
+  if (isCollapsed) {
+    btn.classList.add('is-collapsed');
+    btn.setAttribute('title', 'Open Menu');
+    btn.setAttribute('aria-label', 'Open Menu');
+  } else {
+    btn.classList.remove('is-collapsed');
+    btn.setAttribute('title', 'Close Menu');
+    btn.setAttribute('aria-label', 'Close Menu');
+  }
+}
+
 function initSidebar() {
   const sidebar = document.querySelector('.sidebar');
   const mainContent = document.querySelector('.main-content');
-  if (!sidebar || !mainContent) return;
-  const collapsed = localStorage.getItem(SIDEBAR_KEY) === 'true';
-  if (collapsed) {
-    sidebar.classList.add('collapsed');
-    mainContent.classList.add('sidebar-collapsed');
+  if (!sidebar) return;
+
+  // Ensure overlay element exists
+  let overlay = document.querySelector('.sidebar-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.className = 'sidebar-overlay';
+    document.body.appendChild(overlay);
+  }
+  overlay.addEventListener('click', closeSidebarMobile);
+
+  const isMobile = window.innerWidth <= 1024;
+  if (isMobile) {
+    sidebar.classList.remove('mobile-open');
+    sidebar.classList.remove('open');
+    if (mainContent) mainContent.classList.remove('sidebar-collapsed');
+    updateSidebarButtonState(true);
+  } else {
+    const collapsed = localStorage.getItem(SIDEBAR_KEY) === 'true';
+    if (collapsed) {
+      sidebar.classList.add('collapsed');
+      if (mainContent) mainContent.classList.add('sidebar-collapsed');
+      updateSidebarButtonState(true);
+    } else {
+      sidebar.classList.remove('collapsed');
+      if (mainContent) mainContent.classList.remove('sidebar-collapsed');
+      updateSidebarButtonState(false);
+    }
   }
 }
 
@@ -46,28 +89,62 @@ function toggleSidebar() {
   const mainContent = document.querySelector('.main-content');
   const overlay = document.querySelector('.sidebar-overlay');
   if (!sidebar) return;
+
   const isMobile = window.innerWidth <= 1024;
   if (isMobile) {
-    sidebar.classList.toggle('mobile-open');
-    if (overlay) overlay.classList.toggle('show');
+    const isOpen = sidebar.classList.toggle('mobile-open');
+    sidebar.classList.toggle('open', isOpen);
+    if (overlay) overlay.classList.toggle('show', isOpen);
+    updateSidebarButtonState(!isOpen);
   } else {
-    sidebar.classList.toggle('collapsed');
-    if (mainContent) mainContent.classList.toggle('sidebar-collapsed');
-    localStorage.setItem(SIDEBAR_KEY, sidebar.classList.contains('collapsed'));
+    const isCollapsed = sidebar.classList.toggle('collapsed');
+    if (mainContent) mainContent.classList.toggle('sidebar-collapsed', isCollapsed);
+    localStorage.setItem(SIDEBAR_KEY, isCollapsed);
+    updateSidebarButtonState(isCollapsed);
   }
 }
 
 function closeSidebarMobile() {
   const sidebar = document.querySelector('.sidebar');
   const overlay = document.querySelector('.sidebar-overlay');
-  if (sidebar) sidebar.classList.remove('mobile-open');
-  if (overlay) overlay.classList.remove('show');
+  if (sidebar) {
+    sidebar.classList.remove('mobile-open');
+    sidebar.classList.remove('open');
+  }
+  if (overlay) {
+    overlay.classList.remove('show');
+    overlay.classList.remove('open');
+  }
+  updateSidebarButtonState(true);
 }
+
+window.addEventListener('resize', () => {
+  const sidebar = document.querySelector('.sidebar');
+  const mainContent = document.querySelector('.main-content');
+  const overlay = document.querySelector('.sidebar-overlay');
+  if (!sidebar) return;
+
+  const isMobile = window.innerWidth <= 1024;
+  if (isMobile) {
+    const isOpen = sidebar.classList.contains('mobile-open') || sidebar.classList.contains('open');
+    updateSidebarButtonState(!isOpen);
+  } else {
+    if (overlay) {
+      overlay.classList.remove('show');
+      overlay.classList.remove('open');
+    }
+    const isCollapsed = sidebar.classList.contains('collapsed');
+    if (mainContent) mainContent.classList.toggle('sidebar-collapsed', isCollapsed);
+    updateSidebarButtonState(isCollapsed);
+  }
+});
 
 // ── Profile Dropdown ──
 function toggleProfileDropdown() {
   const dropdown = document.getElementById('profileDropdown');
-  if (dropdown) dropdown.classList.toggle('show');
+  if (!dropdown) return;
+  const isBlock = dropdown.style.display === 'block';
+  dropdown.style.display = isBlock ? 'none' : 'block';
 }
 
 // ── Notification Dropdown ──
@@ -250,9 +327,12 @@ document.addEventListener('click', (e) => {
     const d = document.getElementById('notificationDropdown');
     if (d) d.style.display = 'none';
   }
-  if (!e.target.closest('.sidebar-profile')) {
+  if (!e.target.closest('.user-avatar-wrap')) {
     const d = document.getElementById('profileDropdown');
-    if (d) d.classList.remove('show');
+    if (d) {
+      d.style.display = 'none';
+      d.classList.remove('show');
+    }
   }
 });
 

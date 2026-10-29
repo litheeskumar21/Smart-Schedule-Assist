@@ -77,36 +77,38 @@
                         </thead>
                         <tbody>
                         <tr th:each="period : ${allPeriods}">
-                            <td style="background-color: #f8f9fa; font-weight: 600; text-align: center; vertical-align: middle;">
+                            <td style="background-color: var(--surface-2); font-weight: 600; text-align: center; vertical-align: middle;">
                                 <span th:text="${'Period ' + period.periodNumber}">Period 1</span><br>
-                                <span style="font-size: 11px; font-weight: normal; color: var(--text-secondary);"
+                                <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);"
                                       th:text="${#temporals.format(period.startTime, 'hh:mm a') + ' - ' + #temporals.format(period.endTime, 'hh:mm a')}">09:00 - 09:50</span>
                             </td>
 
-                            <td th:if="${period.type.name() == 'BREAK'}" colspan="5" class="cell-break">
+                            <td th:if="${period.type != null and period.type.name() == 'BREAK'}" colspan="5" class="cell-break">
                                 ☕ Short Break
                             </td>
 
-                            <td th:if="${period.type.name() == 'LUNCH'}" colspan="5" class="cell-lunch" style="font-weight: 600; color: var(--warning);">
+                            <td th:if="${period.type != null and period.type.name() == 'LUNCH'}" colspan="5" class="cell-lunch" style="font-weight: 600; color: var(--warning);">
                                 🍱 Lunch Break
                             </td>
 
-                            <td th:if="${period.type.name() == 'CLASS'}" th:each="day : ${T(java.time.DayOfWeek).values()}" th:if="${day.value <= 5}">
-                                <div th:with="dayList=${weeklyTimetable.get(day)}, matchingEntries=${dayList != null ? dayList.?[period.id == #root.period.id] : null}">
-                                    <div th:if="${matchingEntries != null && !matchingEntries.isEmpty() && matchingEntries[0].subject != null}"
-                                         class="timetable-cell"
-                                         th:classappend="${matchingEntries[0].status.name() == 'CANCELLED'} ? 'cell-cancelled' : ''">
-                                        <div class="cell-subject" th:text="${matchingEntries[0].subject.name}">Data Structures</div>
-                                        <div class="cell-teacher" th:if="${matchingEntries[0].teacher != null}" th:text="${matchingEntries[0].teacher.user.fullName}">Prof. Name</div>
-                                        <div class="cell-room" th:if="${matchingEntries[0].classroom != null}">📍 <span th:text="${matchingEntries[0].classroom.name}">Room 101</span></div>
-                                        <div th:if="${matchingEntries[0].isLocked()}" style="font-size: 10px; color: var(--primary);">🔒 Locked</div>
-                                        <div th:if="${matchingEntries[0].status.name() == 'CANCELLED'}" class="badge badge-rejected" style="margin-top: 4px; font-size: 10px;">CANCELLED</div>
+                            <th:block th:if="${period.type != null and period.type.name() == 'CLASS'}">
+                                <td th:each="day : ${T(java.time.DayOfWeek).values()}" th:if="${day.value <= 5}">
+                                    <div th:with="entry=${timetableGrid != null ? timetableGrid.get(day.name() + '_' + period.id) : null}">
+                                        <div th:if="${entry != null and entry.subject != null}"
+                                             class="timetable-cell"
+                                             th:classappend="${entry.status != null and entry.status.name() == 'CANCELLED'} ? 'cell-cancelled' : ''">
+                                            <div class="cell-subject" th:text="${entry.subject.name}">Data Structures</div>
+                                            <div class="cell-teacher" th:if="${entry.teacher != null and entry.teacher.user != null}" th:text="${entry.teacher.user.fullName}">Prof. Name</div>
+                                            <div class="cell-room" th:if="${entry.classroom != null}">📍 <span th:text="${entry.classroom.name}">Room 101</span></div>
+                                            <div th:if="${entry.locked}" style="font-size: 10px; color: var(--role-primary, var(--primary));">🔒 Locked</div>
+                                            <div th:if="${entry.status != null and entry.status.name() == 'CANCELLED'}" class="badge badge-rejected" style="margin-top: 4px; font-size: 10px;">CANCELLED</div>
+                                        </div>
+                                        <div th:if="${entry == null or entry.subject == null}" class="cell-free" style="padding: 12px; color: var(--text-muted); font-size: 12px; text-align: center;">
+                                            FREE
+                                        </div>
                                     </div>
-                                    <div th:if="${matchingEntries == null || matchingEntries.isEmpty() || matchingEntries[0].subject == null}" class="cell-free" style="padding: 12px; color: var(--cancelled); font-size: 12px; text-align: center;">
-                                        FREE
-                                    </div>
-                                </div>
-                            </td>
+                                </td>
+                            </th:block>
                         </tr>
                         </tbody>
                     </table>
@@ -138,33 +140,35 @@
                         </thead>
                         <tbody>
                         <tr th:each="period : ${allPeriods}">
-                            <td style="background-color: #f8f9fa; font-weight: 600; text-align: center; vertical-align: middle;">
+                            <td style="background-color: var(--surface-2); font-weight: 600; text-align: center; vertical-align: middle;">
                                 <span th:text="${'Period ' + period.periodNumber}">Period 1</span><br>
-                                <span style="font-size: 11px; font-weight: normal; color: var(--text-secondary);"
+                                <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);"
                                       th:text="${#temporals.format(period.startTime, 'hh:mm a') + ' - ' + #temporals.format(period.endTime, 'hh:mm a')}">09:00 - 09:50</span>
                             </td>
 
-                            <td th:if="${period.type.name() == 'BREAK'}" colspan="5" class="cell-break">
+                            <td th:if="${period.type != null and period.type.name() == 'BREAK'}" colspan="5" class="cell-break">
                                 ☕ Short Break
                             </td>
 
-                            <td th:if="${period.type.name() == 'LUNCH'}" colspan="5" class="cell-lunch" style="font-weight: 600; color: var(--warning);">
+                            <td th:if="${period.type != null and period.type.name() == 'LUNCH'}" colspan="5" class="cell-lunch" style="font-weight: 600; color: var(--warning);">
                                 🍱 Lunch Break
                             </td>
 
-                            <td th:if="${period.type.name() == 'CLASS'}" th:each="day : ${T(java.time.DayOfWeek).values()}" th:if="${day.value <= 5}">
-                                <div th:with="dayList=${weeklyTimetable.get(day)}, matchingEntries=${dayList != null ? dayList.?[period.id == #root.period.id] : null}">
-                                    <div th:if="${matchingEntries != null && !matchingEntries.isEmpty() && matchingEntries[0].subject != null}"
-                                         class="timetable-cell">
-                                        <div style="font-weight: 700; color: var(--primary);" th:text="${matchingEntries[0].section != null ? matchingEntries[0].section.displayName : '-'}">CSE-A</div>
-                                        <div class="cell-subject" th:text="${matchingEntries[0].subject.name}">Data Structures</div>
-                                        <div class="cell-room" th:if="${matchingEntries[0].classroom != null}">📍 <span th:text="${matchingEntries[0].classroom.name}">Room 101</span></div>
+                            <th:block th:if="${period.type != null and period.type.name() == 'CLASS'}">
+                                <td th:each="day : ${T(java.time.DayOfWeek).values()}" th:if="${day.value <= 5}">
+                                    <div th:with="entry=${timetableGrid != null ? timetableGrid.get(day.name() + '_' + period.id) : null}">
+                                        <div th:if="${entry != null and entry.subject != null}"
+                                             class="timetable-cell">
+                                            <div style="font-weight: 700; color: var(--role-primary, var(--primary));" th:text="${entry.section != null ? entry.section.displayName : '-'}">CSE-A</div>
+                                            <div class="cell-subject" th:text="${entry.subject.name}">Data Structures</div>
+                                            <div class="cell-room" th:if="${entry.classroom != null}">📍 <span th:text="${entry.classroom.name}">Room 101</span></div>
+                                        </div>
+                                        <div th:if="${entry == null or entry.subject == null}" class="cell-free" style="padding: 12px; color: var(--text-muted); font-size: 12px; text-align: center;">
+                                            FREE
+                                        </div>
                                     </div>
-                                    <div th:if="${matchingEntries == null || matchingEntries.isEmpty() || matchingEntries[0].subject == null}" class="cell-free" style="padding: 12px; color: var(--cancelled); font-size: 12px; text-align: center;">
-                                        FREE
-                                    </div>
-                                </div>
-                            </td>
+                                </td>
+                            </th:block>
                         </tr>
                         </tbody>
                     </table>

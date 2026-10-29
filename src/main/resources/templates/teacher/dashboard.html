@@ -15,8 +15,8 @@
     <aside class="sidebar" th:replace="~{fragments/sidebar :: sidebar('dashboard')}"></aside>
     
     <main class="main-content">
+        <header class="header" th:replace="~{fragments/header :: header('Teacher Dashboard')}"></header>
         <div class="content-wrapper">
-            <header class="header" th:replace="~{fragments/header :: header('Teacher Dashboard')}"></header>
 
             <div th:if="${successMessage}" class="alert alert-success">
                 <div class="alert-icon">✓</div>

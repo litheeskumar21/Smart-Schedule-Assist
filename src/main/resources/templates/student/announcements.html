@@ -13,6 +13,7 @@
 <div class="app-layout">
     <main class="main-content">
         <header class="header" th:replace="~{fragments/header :: header('Announcements')}"></header>
+        <div class="content-wrapper">
 
         <div class="page-header" style="margin-bottom:20px;">
             <h1 class="page-title" style="margin:0;">Announcements</h1>
@@ -37,6 +38,7 @@
                     <span class="text-muted" style="font-size: 13px;">By <strong th:text="${a.createdBy != null ? a.createdBy.fullName : 'Admin'}">Admin</strong></span>
                 </div>
             </div>
+        </div>
         </div>
     </main>
 </div>

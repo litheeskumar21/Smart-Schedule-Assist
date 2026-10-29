@@ -15,8 +15,8 @@
     <aside class="sidebar" th:replace="~{fragments/sidebar :: sidebar('change-requests')}"></aside>
     
     <main class="main-content">
+        <header class="header" th:replace="~{fragments/header :: header('Change Requests')}"></header>
         <div class="content-wrapper">
-            <header class="header" th:replace="~{fragments/header :: header('Change Requests')}"></header>
 
             <div th:if="${successMessage}" class="alert alert-success">
                 <div class="alert-icon">✓</div>

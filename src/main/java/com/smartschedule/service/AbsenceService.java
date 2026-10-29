@@ -81,6 +81,17 @@ public class AbsenceService {
 
         absenceAffectedClassRepository.saveAll(affectedList);
         savedRequest.setAffectedClasses(affectedList);
+
+        // Notify admins about new absence request
+        String teacherName = teacher != null && teacher.getUser() != null ? teacher.getUser().getFullName() : "Faculty";
+        String absenceTypeStr = dto.getAbsenceType() != null ? dto.getAbsenceType().name().replace('_', ' ') : "Absence";
+        String reasonStr = dto.getReason() != null && !dto.getReason().trim().isEmpty() ? " Reason: " + dto.getReason() : "";
+        notificationService.notifyAdmins(
+                "New Absence Request: " + teacherName,
+                teacherName + " requested " + absenceTypeStr + " on " + dto.getAbsenceDate() + "." + reasonStr,
+                NotificationType.SYSTEM
+        );
+
         return savedRequest;
     }
 
@@ -145,6 +156,14 @@ public class AbsenceService {
 
         request.setStatus(RequestStatus.WITHDRAWN);
         absenceRequestRepository.save(request);
+
+        // Notify admins about withdrawal
+        String teacherName = teacher != null && teacher.getUser() != null ? teacher.getUser().getFullName() : "Faculty";
+        notificationService.notifyAdmins(
+                "Absence Request Withdrawn: " + teacherName,
+                teacherName + " withdrew their absence request for " + request.getAbsenceDate() + ".",
+                NotificationType.SYSTEM
+        );
     }
 
     @Transactional(readOnly = true)

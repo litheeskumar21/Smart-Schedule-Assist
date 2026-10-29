@@ -92,9 +92,19 @@ public class TimetableController {
             Section section = sectionRepository.findById(sectionId).orElse(null);
             if (section != null) {
                 model.addAttribute("selectedSection", section);
-                model.addAttribute("entries", timetableService.getAllEntriesForSection(section));
-                model.addAttribute("weeklyTimetable", timetableService.getWeeklyTimetable(section));
+                List<TimetableEntry> entries = timetableService.getAllEntriesForSection(section);
+                model.addAttribute("entries", entries);
+                Map<DayOfWeek, List<TimetableEntry>> weekly = timetableService.getWeeklyTimetable(section);
+                model.addAttribute("weeklyTimetable", weekly);
                 model.addAttribute("allPeriods", timetableService.getAllPeriods());
+
+                Map<String, TimetableEntry> grid = new java.util.HashMap<>();
+                for (TimetableEntry e : entries) {
+                    if (e.isPublished() && e.getDayOfWeek() != null && e.getPeriod() != null) {
+                        grid.put(e.getDayOfWeek().name() + "_" + e.getPeriod().getId(), e);
+                    }
+                }
+                model.addAttribute("timetableGrid", grid);
             }
         }
 
@@ -237,9 +247,24 @@ public class TimetableController {
         model.addAttribute("sections", sectionRepository.findAll());
         model.addAttribute("teachers", teacherRepository.findAll());
         model.addAttribute("selectedTeacher", teacher);
-        model.addAttribute("weeklyTimetable", timetableService.getWeeklyTeacherTimetable(teacher));
+        Map<DayOfWeek, List<TimetableEntry>> weekly = timetableService.getWeeklyTeacherTimetable(teacher);
+        model.addAttribute("weeklyTimetable", weekly);
         model.addAttribute("allPeriods", timetableService.getAllPeriods());
         model.addAttribute("unreadCount", notificationService.getUnreadCount(user));
+
+        Map<String, TimetableEntry> grid = new java.util.HashMap<>();
+        if (weekly != null) {
+            for (Map.Entry<DayOfWeek, List<TimetableEntry>> entry : weekly.entrySet()) {
+                if (entry.getValue() != null) {
+                    for (TimetableEntry e : entry.getValue()) {
+                        if (e.getDayOfWeek() != null && e.getPeriod() != null) {
+                            grid.put(e.getDayOfWeek().name() + "_" + e.getPeriod().getId(), e);
+                        }
+                    }
+                }
+            }
+        }
+        model.addAttribute("timetableGrid", grid);
 
         return "admin/timetables";
     }

@@ -6,8 +6,10 @@ import com.smartschedule.model.Student;
 import com.smartschedule.model.Teacher;
 import com.smartschedule.model.User;
 import com.smartschedule.model.enums.NotificationType;
+import com.smartschedule.model.enums.UserRole;
 import com.smartschedule.repository.NotificationRepository;
 import com.smartschedule.repository.StudentRepository;
+import com.smartschedule.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -22,12 +24,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final StudentRepository studentRepository;
+    private final UserRepository userRepository;
     private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
 
     public NotificationService(NotificationRepository notificationRepository,
-                               StudentRepository studentRepository) {
+                               StudentRepository studentRepository,
+                               UserRepository userRepository) {
         this.notificationRepository = notificationRepository;
         this.studentRepository = studentRepository;
+        this.userRepository = userRepository;
     }
 
     public Notification createNotification(User user, String title, String message, NotificationType type) {
@@ -58,6 +63,13 @@ public class NotificationService {
     public void notifyTeacher(Teacher teacher, String title, String message, NotificationType type) {
         if (teacher != null && teacher.getUser() != null) {
             createNotification(teacher.getUser(), title, message, type);
+        }
+    }
+
+    public void notifyAdmins(String title, String message, NotificationType type) {
+        List<User> admins = userRepository.findByRole(UserRole.ROLE_ADMIN);
+        for (User admin : admins) {
+            createNotification(admin, title, message, type);
         }
     }
 

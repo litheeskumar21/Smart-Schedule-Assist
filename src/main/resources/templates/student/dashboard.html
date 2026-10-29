@@ -16,7 +16,7 @@
     <main class="main-content">
         <header class="header" th:replace="~{fragments/header :: header('Student Dashboard')}"></header>
 
-        <div style="padding: 24px; max-width: 1200px; margin: 0 auto;">
+        <div class="content-wrapper">
             <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}" style="margin-bottom: 24px; padding: 16px; border-radius: 12px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0;"></div>
             <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}" style="margin-bottom: 24px; padding: 16px; border-radius: 12px; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;"></div>
 
@@ -26,15 +26,15 @@
                     <div>
                         <h2 style="font-size: 24px; font-weight: 700; color: var(--primary); margin: 0 0 8px 0;" th:text="${student.user.fullName}">Student Name</h2>
                         <div class="text-muted" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; font-size: 14px;">
-                            <span style="background: #f1f5f9; padding: 4px 12px; border-radius: 99px;">ID: <strong th:text="${student.studentId}">S001</strong></span>
-                            <span style="background: #f1f5f9; padding: 4px 12px; border-radius: 99px;">Dept: <strong th:text="${student.department != null ? student.department.name : 'N/A'}">CSE</strong></span>
-                            <span style="background: #f1f5f9; padding: 4px 12px; border-radius: 99px;">Year: <strong th:text="${student.academicYear != null ? student.academicYear.label : 'N/A'}">2nd Year</strong></span>
-                            <span style="background: #f1f5f9; padding: 4px 12px; border-radius: 99px;">Sec: <strong th:text="${student.section != null ? student.section.displayName : 'N/A'}">CSE-A</strong></span>
-                            <span style="background: #f1f5f9; padding: 4px 12px; border-radius: 99px;">Sem: <strong th:text="${student.semester}">3</strong></span>
+                            <span style="background: var(--surface-2); border: 1px solid var(--border); padding: 4px 12px; border-radius: 99px;">ID: <strong th:text="${student.studentId}">S001</strong></span>
+                            <span style="background: var(--surface-2); border: 1px solid var(--border); padding: 4px 12px; border-radius: 99px;">Dept: <strong th:text="${student.department != null ? student.department.name : 'N/A'}">CSE</strong></span>
+                            <span style="background: var(--surface-2); border: 1px solid var(--border); padding: 4px 12px; border-radius: 99px;">Year: <strong th:text="${student.academicYear != null ? student.academicYear.label : 'N/A'}">2nd Year</strong></span>
+                            <span style="background: var(--surface-2); border: 1px solid var(--border); padding: 4px 12px; border-radius: 99px;">Sec: <strong th:text="${student.section != null ? student.section.displayName : 'N/A'}">CSE-A</strong></span>
+                            <span style="background: var(--surface-2); border: 1px solid var(--border); padding: 4px 12px; border-radius: 99px;">Sem: <strong th:text="${student.semester}">3</strong></span>
                         </div>
                     </div>
                     <div style="display: flex; gap: 12px;">
-                        <a th:href="@{/student/timetable/pdf}" class="btn btn-secondary" style="padding: 10px 16px; border-radius: 99px; background: white; border: 1px solid #e2e8f0; color: #0f172a; text-decoration: none; font-weight: 500;">📄 PDF</a>
+                        <a th:href="@{/student/timetable/pdf}" class="btn btn-secondary" style="padding: 10px 16px; border-radius: 99px; text-decoration: none; font-weight: 500;">📄 PDF</a>
                         <a th:href="@{/student/timetable}" class="btn btn-primary" style="padding: 10px 20px; border-radius: 99px; text-decoration: none; font-weight: 600;">Full Timetable →</a>
                     </div>
                 </div>
@@ -84,7 +84,7 @@
             <div class="card mb-24" style="padding: 24px;">
                 <div class="card-header flex-between flex-center" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
                     <h3 style="margin: 0; font-size: 20px; font-weight: 700;">📅 Today's Schedule (<span th:text="${#strings.capitalize(#strings.toLowerCase(currentDay))}">Monday</span>)</h3>
-                    <a th:href="@{/student/timetable/pdf/today}" class="btn btn-secondary btn-sm" style="padding: 8px 16px; border-radius: 99px; font-size: 14px; text-decoration: none; color: #475569; background: #f1f5f9;">Download Today</a>
+                    <a th:href="@{/student/timetable/pdf/today}" class="btn btn-secondary btn-sm" style="padding: 8px 16px; border-radius: 99px; font-size: 14px; text-decoration: none;">Download Today</a>
                 </div>
                 
                 <div class="timeline" style="position: relative; padding-left: 12px;">
@@ -98,23 +98,23 @@
                         
                         <!-- Connector -->
                         <div class="timeline-connector" style="position: relative; width: 24px; display: flex; justify-content: center; flex-shrink: 0;">
-                            <div style="position: absolute; top: 8px; bottom: -32px; width: 2px; background: #e2e8f0; z-index: 1;" th:styleappend="${iterStat.last ? 'display:none;' : ''}"></div>
-                            <div style="width: 16px; height: 16px; border-radius: 50%; background: white; border: 3px solid #e2e8f0; position: relative; z-index: 2; margin-top: 4px; box-shadow: 0 0 0 4px white;" th:styleappend="${iterStat.index == 2 ? 'border-color: var(--primary); background: var(--primary);' : ''}"></div>
+                            <div style="position: absolute; top: 8px; bottom: -32px; width: 2px; background: var(--border); z-index: 1;" th:styleappend="${iterStat.last ? 'display:none;' : ''}"></div>
+                            <div style="width: 16px; height: 16px; border-radius: 50%; background: var(--surface); border: 3px solid var(--border); position: relative; z-index: 2; margin-top: 4px; box-shadow: 0 0 0 4px var(--surface);" th:styleappend="${iterStat.index == 2 ? 'border-color: var(--primary); background: var(--primary);' : ''}"></div>
                         </div>
                         
                         <!-- Card Content -->
                         <div class="timeline-card" style="flex: 1; min-width: 0;">
                             
                             <!-- BREAK / LUNCH -->
-                            <div th:if="${period.type.name() == 'BREAK'}" class="break-card" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 12px;">
+                            <div th:if="${period.type.name() == 'BREAK'}" class="break-card" style="background: var(--surface-2); border: 1px dashed var(--border); border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 12px;">
                                 <span style="font-size: 24px;">☕</span>
                                 <div>
-                                    <div style="font-weight: 600; color: #475569;">Short Break</div>
-                                    <div style="font-size: 13px; color: #94a3b8;" th:text="${#temporals.format(period.startTime, 'hh:mm a') + ' - ' + #temporals.format(period.endTime, 'hh:mm a')}">10:40 - 11:00</div>
+                                    <div style="font-weight: 600; color: var(--text);">Short Break</div>
+                                    <div style="font-size: 13px; color: var(--text-muted);" th:text="${#temporals.format(period.startTime, 'hh:mm a') + ' - ' + #temporals.format(period.endTime, 'hh:mm a')}">10:40 - 11:00</div>
                                 </div>
                             </div>
                             
-                            <div th:if="${period.type.name() == 'LUNCH'}" class="break-card" style="background: #fff7ed; border: 1px dashed #fdba74; border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 12px;">
+                            <div th:if="${period.type.name() == 'LUNCH'}" class="break-card" style="background: var(--surface-2); border: 1px dashed var(--border); border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 12px;">
                                 <span style="font-size: 24px;">🍱</span>
                                 <div>
                                     <div style="font-weight: 600; color: #ea580c;">Lunch Break</div>
@@ -128,7 +128,7 @@
                                 <!-- Active Class -->
                                 <div th:if="${!matchingEntries.isEmpty() && matchingEntries[0].subject != null}" 
                                      th:class="${matchingEntries[0].status.name() == 'CANCELLED'} ? 'cancelled-card' : ''"
-                                     style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; transition: 0.2s;"
+                                     style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: var(--shadow-sm); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; transition: 0.2s;"
                                      th:styleappend="${iterStat.index == 2 ? 'border-color: var(--primary); box-shadow: 0 4px 12px rgba(20, 184, 166, 0.15);' : (matchingEntries[0].status.name() == 'CANCELLED' ? 'background: #fef2f2; border-color: #fecaca; opacity: 0.8;' : '')}">
                                     
                                     <div>
@@ -181,7 +181,7 @@
 
 <div class="sidebar-overlay" onclick="closeSidebarMobile()" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 30; backdrop-filter: blur(2px);"></div>
 
-<div class="bottom-nav" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e2e8f0; padding-bottom: env(safe-area-inset-bottom); z-index: 40; box-shadow: 0 -4px 12px rgba(0,0,0,0.05);">
+<div class="bottom-nav" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); padding-bottom: env(safe-area-inset-bottom); z-index: 40; box-shadow: var(--shadow-sm);">
   <div style="display: flex; justify-content: space-around; padding: 8px 0;">
       <a th:href="@{/student/dashboard}" class="bottom-nav-item active" style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: var(--primary); flex: 1;">
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
@@ -201,15 +201,6 @@
       </a>
   </div>
 </div>
-
-<style>
-  @media (max-width: 768px) {
-    .bottom-nav { display: block !important; }
-    .sidebar { transform: translateX(-100%); position: fixed; z-index: 50; transition: 0.3s; }
-    .sidebar.open { transform: translateX(0); }
-    .sidebar-overlay.open { display: block !important; }
-  }
-</style>
 
 <script th:src="@{/js/app.js}"></script>
 <script th:src="@{/js/notifications.js}"></script>

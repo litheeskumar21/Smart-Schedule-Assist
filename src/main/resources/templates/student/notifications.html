@@ -13,6 +13,7 @@
 <div class="app-layout">
     <main class="main-content">
         <header class="header" th:replace="~{fragments/header :: header('Notifications')}"></header>
+        <div class="content-wrapper">
 
         <div class="page-header flex-between flex-center" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h1 class="page-title" style="margin:0;">Notifications</h1>
@@ -57,6 +58,7 @@
                     <span th:if="${!n.read}" class="badge badge-pending">Unread</span>
                 </div>
             </div>
+        </div>
         </div>
     </main>
 </div>

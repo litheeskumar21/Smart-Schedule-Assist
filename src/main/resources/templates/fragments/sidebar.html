@@ -1,130 +1,159 @@
 <aside class="sidebar" th:fragment="sidebar(activeMenu)" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-  <div class="sidebar-header" style="display: flex; align-items: center; gap: 12px; padding: 20px;">
-    <svg class="sidebar-logo" style="width: 32px; height: 32px; color: var(--primary);" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor">
-      <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-    </svg>
-    <h2 class="sidebar-logo-text" style="font-size: 18px; font-weight: 700; margin: 0;">Smart Schedule</h2>
+  <div class="sidebar-header">
+    <div class="sidebar-logo-icon">
+      <svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+    </div>
+    <div class="sidebar-brand-info">
+      <h2 class="sidebar-logo-text">Smart Schedule</h2>
+      <span class="sidebar-role-badge" sec:authorize="hasRole('ADMIN')">Admin Portal</span>
+      <span class="sidebar-role-badge" sec:authorize="hasRole('TEACHER')">Staff Portal</span>
+      <span class="sidebar-role-badge" sec:authorize="hasRole('STUDENT')">Student Portal</span>
+    </div>
+    <!-- Mobile close button -->
+    <button type="button" class="sidebar-close-btn mobile-only" onclick="closeSidebarMobile()" aria-label="Close Sidebar" title="Close">
+      <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
   </div>
   
-  <nav class="sidebar-nav" style="padding: 0 16px;">
+  <nav class="sidebar-nav">
+    <!-- STUDENT NAV -->
     <div sec:authorize="hasRole('STUDENT')">
-      <a th:href="@{/student/dashboard}" th:classappend="${activeMenu == 'dashboard'} ? 'active'" class="nav-item" data-tooltip="Dashboard">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <div class="nav-section-title">Navigation</div>
+      <a th:href="@{/student/dashboard}" th:classappend="${activeMenu == 'dashboard'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
         <span class="nav-label">Dashboard</span>
       </a>
-      <a th:href="@{/student/timetable}" th:classappend="${activeMenu == 'timetable'} ? 'active'" class="nav-item" data-tooltip="Timetable">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <a th:href="@{/student/timetable}" th:classappend="${activeMenu == 'timetable'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
         <span class="nav-label">Timetable</span>
       </a>
-      <a th:href="@{/student/notifications}" th:classappend="${activeMenu == 'notifications'} ? 'active'" class="nav-item" data-tooltip="Notifications">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <a th:href="@{/student/notifications}" th:classappend="${activeMenu == 'notifications'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
         <span class="nav-label">Notifications</span>
       </a>
-      <a th:href="@{/student/announcements}" th:classappend="${activeMenu == 'announcements'} ? 'active'" class="nav-item" data-tooltip="Announcements">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M22 8.5c0 2.485-4.925 4.5-11 4.5S0 10.985 0 8.5 4.925 4 11 4s11 2.015 11 4.5z"/><path d="M11 13c-6.075 0-11-2.015-11-4.5V17c0 2.485 4.925 4.5 11 4.5s11-2.015 11-4.5V8.5"/></svg>
+      <a th:href="@{/student/announcements}" th:classappend="${activeMenu == 'announcements'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M22 8.5c0 2.485-4.925 4.5-11 4.5S0 10.985 0 8.5 4.925 4 11 4s11 2.015 11 4.5z"/><path d="M11 13c-6.075 0-11-2.015-11-4.5V17c0 2.485 4.925 4.5 11 4.5s11-2.015 11-4.5V8.5"/></svg></span>
         <span class="nav-label">Announcements</span>
       </a>
-      <a th:href="@{/student/profile}" th:classappend="${activeMenu == 'profile'} ? 'active'" class="nav-item" data-tooltip="Profile">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <a th:href="@{/student/profile}" th:classappend="${activeMenu == 'profile'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
         <span class="nav-label">Profile</span>
       </a>
     </div>
     
+    <!-- TEACHER / STAFF NAV -->
     <div sec:authorize="hasRole('TEACHER')">
-      <a th:href="@{/teacher/dashboard}" th:classappend="${activeMenu == 'dashboard'} ? 'active'" class="nav-item" data-tooltip="Dashboard">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <div class="nav-section-title">Schedule & Teaching</div>
+      <a th:href="@{/teacher/dashboard}" th:classappend="${activeMenu == 'dashboard'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
         <span class="nav-label">Dashboard</span>
       </a>
-      <a th:href="@{/teacher/timetable}" th:classappend="${activeMenu == 'timetable'} ? 'active'" class="nav-item" data-tooltip="Timetable">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <a th:href="@{/teacher/timetable}" th:classappend="${activeMenu == 'timetable'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
         <span class="nav-label">Timetable</span>
       </a>
-      <a th:href="@{/teacher/absence}" th:classappend="${activeMenu == 'absence'} ? 'active'" class="nav-item" data-tooltip="Absence Requests">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+
+      <div class="nav-section-title">Requests & Alerts</div>
+      <a th:href="@{/teacher/absence}" th:classappend="${activeMenu == 'absence'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg></span>
         <span class="nav-label">Absence Requests</span>
       </a>
-      <a th:href="@{/teacher/change-requests}" th:classappend="${activeMenu == 'change-requests'} ? 'active'" class="nav-item" data-tooltip="Change Requests">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      <a th:href="@{/teacher/change-requests}" th:classappend="${activeMenu == 'change-requests'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span>
         <span class="nav-label">Change Requests</span>
       </a>
-      <a th:href="@{/teacher/notifications}" th:classappend="${activeMenu == 'notifications'} ? 'active'" class="nav-item" data-tooltip="Notifications">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <a th:href="@{/teacher/notifications}" th:classappend="${activeMenu == 'notifications'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
         <span class="nav-label">Notifications</span>
       </a>
-      <a th:href="@{/teacher/profile}" th:classappend="${activeMenu == 'profile'} ? 'active'" class="nav-item" data-tooltip="Profile">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <a th:href="@{/teacher/profile}" th:classappend="${activeMenu == 'profile'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
         <span class="nav-label">Profile</span>
       </a>
     </div>
     
+    <!-- ADMIN NAV -->
     <div sec:authorize="hasRole('ADMIN')">
-      <a th:href="@{/admin/dashboard}" th:classappend="${activeMenu == 'dashboard'} ? 'active'" class="nav-item" data-tooltip="Dashboard">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <div class="nav-section-title">Overview</div>
+      <a th:href="@{/admin/dashboard}" th:classappend="${activeMenu == 'dashboard'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
         <span class="nav-label">Dashboard</span>
       </a>
-      <a th:href="@{/admin/timetables}" th:classappend="${activeMenu == 'timetables'} ? 'active'" class="nav-item" data-tooltip="Timetables">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <a th:href="@{/admin/timetables}" th:classappend="${activeMenu == 'timetables'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
         <span class="nav-label">Timetables</span>
       </a>
-      <a th:href="@{/admin/students}" th:classappend="${activeMenu == 'students'} ? 'active'" class="nav-item" data-tooltip="Students">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+
+      <div class="nav-section-title">Academic & Records</div>
+      <a th:href="@{/admin/students}" th:classappend="${activeMenu == 'students'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
         <span class="nav-label">Students</span>
       </a>
-      <a th:href="@{/admin/teachers}" th:classappend="${activeMenu == 'teachers'} ? 'active'" class="nav-item" data-tooltip="Teachers">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <a th:href="@{/admin/teachers}" th:classappend="${activeMenu == 'teachers'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
         <span class="nav-label">Teachers</span>
       </a>
-      <a th:href="@{/admin/departments}" th:classappend="${activeMenu == 'departments'} ? 'active'" class="nav-item" data-tooltip="Departments">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <a th:href="@{/admin/departments}" th:classappend="${activeMenu == 'departments'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
         <span class="nav-label">Departments</span>
       </a>
-      <a th:href="@{/admin/sections}" th:classappend="${activeMenu == 'sections'} ? 'active'" class="nav-item" data-tooltip="Sections">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <a th:href="@{/admin/sections}" th:classappend="${activeMenu == 'sections'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>
         <span class="nav-label">Sections</span>
       </a>
-      <a th:href="@{/admin/subjects}" th:classappend="${activeMenu == 'subjects'} ? 'active'" class="nav-item" data-tooltip="Subjects">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <a th:href="@{/admin/subjects}" th:classappend="${activeMenu == 'subjects'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
         <span class="nav-label">Subjects</span>
       </a>
-      <a th:href="@{/admin/classrooms}" th:classappend="${activeMenu == 'classrooms'} ? 'active'" class="nav-item" data-tooltip="Classrooms">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <a th:href="@{/admin/classrooms}" th:classappend="${activeMenu == 'classrooms'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
         <span class="nav-label">Classrooms</span>
       </a>
-      <a th:href="@{/admin/absence-requests}" th:classappend="${activeMenu == 'absence-requests'} ? 'active'" class="nav-item" data-tooltip="Absence Requests">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+
+      <div class="nav-section-title">Requests & Comms</div>
+      <a th:href="@{/admin/absence-requests}" th:classappend="${activeMenu == 'absence-requests'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg></span>
         <span class="nav-label">Absence Requests</span>
       </a>
-      <a th:href="@{/admin/timetable-requests}" th:classappend="${activeMenu == 'timetable-requests'} ? 'active'" class="nav-item" data-tooltip="Timetable Requests">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      <a th:href="@{/admin/timetable-requests}" th:classappend="${activeMenu == 'timetable-requests'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span>
         <span class="nav-label">Timetable Requests</span>
       </a>
-      <a th:href="@{/admin/announcements}" th:classappend="${activeMenu == 'announcements'} ? 'active'" class="nav-item" data-tooltip="Announcements">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M22 8.5c0 2.485-4.925 4.5-11 4.5S0 10.985 0 8.5 4.925 4 11 4s11 2.015 11 4.5z"/><path d="M11 13c-6.075 0-11-2.015-11-4.5V17c0 2.485 4.925 4.5 11 4.5s11-2.015 11-4.5V8.5"/></svg>
+      <a th:href="@{/admin/announcements}" th:classappend="${activeMenu == 'announcements'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M22 8.5c0 2.485-4.925 4.5-11 4.5S0 10.985 0 8.5 4.925 4 11 4s11 2.015 11 4.5z"/><path d="M11 13c-6.075 0-11-2.015-11-4.5V17c0 2.485 4.925 4.5 11 4.5s11-2.015 11-4.5V8.5"/></svg></span>
         <span class="nav-label">Announcements</span>
       </a>
-      <a th:href="@{/admin/notifications}" th:classappend="${activeMenu == 'notifications'} ? 'active'" class="nav-item" data-tooltip="Notifications">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <a th:href="@{/admin/notifications}" th:classappend="${activeMenu == 'notifications'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
         <span class="nav-label">Notifications</span>
       </a>
-      <a th:href="@{/admin/settings}" th:classappend="${activeMenu == 'settings'} ? 'active'" class="nav-item" data-tooltip="Settings">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+
+      <div class="nav-section-title">System</div>
+      <a th:href="@{/admin/settings}" th:classappend="${activeMenu == 'settings'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
         <span class="nav-label">Settings</span>
       </a>
-      <a th:href="@{/admin/activity-log}" th:classappend="${activeMenu == 'activity-log'} ? 'active'" class="nav-item" data-tooltip="Activity Log">
-        <svg class="nav-icon" viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <a th:href="@{/admin/activity-log}" th:classappend="${activeMenu == 'activity-log'} ? 'active'" class="nav-item">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" stroke-width="1.75" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
         <span class="nav-label">Activity Log</span>
       </a>
     </div>
 
-    <!-- Direct Logout Button at end of menu slot -->
-    <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+    <!-- Direct Logout Button at end of menu -->
+    <div class="sidebar-logout-wrapper">
       <form th:action="@{/logout}" method="post" style="margin: 0; padding: 0;">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-        <button type="submit" class="nav-item nav-logout-btn" data-tooltip="Logout">
+        <button type="submit" class="nav-item nav-logout-btn" title="Logout">
           <span class="nav-icon">
             <svg viewBox="0 0 24 24" width="18" height="18" stroke="#ef4444" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
-              <line x1="12" y1="2" x2="12" y2="12"/>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
             </svg>
           </span>
           <span class="nav-label">Logout</span>
@@ -132,34 +161,4 @@
       </form>
     </div>
   </nav>
-
-  <div class="sidebar-footer" style="margin-top: auto; padding: 16px;">
-    <div class="sidebar-profile" style="padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: space-between;">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
-          <span sec:authentication="name" style="text-transform: uppercase;">U</span>
-        </div>
-        <div>
-          <div style="font-weight: 600; font-size: 14px; color: var(--text);" sec:authentication="name">User</div>
-          <div style="font-size: 12px; color: var(--text-muted);" sec:authentication="authorities">Role</div>
-        </div>
-      </div>
-      <button onclick="document.getElementById('profileDropdown').classList.toggle('show')" style="background: none; border: none; cursor: pointer; color: var(--text-muted);">
-        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
-    </div>
-    
-    <div id="profileDropdown" class="profile-dropdown" style="display: none; position: absolute; bottom: 80px; left: 16px; right: 16px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 8px;">
-      <a href="#" class="profile-dropdown-item" style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; text-decoration: none; color: var(--text); border-radius: 8px;">
-        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> View Profile
-      </a>
-      <div style="height: 1px; background: #e2e8f0; margin: 4px 0;"></div>
-      <form th:action="@{/logout}" method="post" style="margin: 0;">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-        <button type="submit" class="profile-dropdown-item" style="width: 100%; display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: none; border: none; color: #ef4444; cursor: pointer; border-radius: 8px; font-size: 14px;">
-          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Logout
-        </button>
-      </form>
-    </div>
-  </div>
 </aside>

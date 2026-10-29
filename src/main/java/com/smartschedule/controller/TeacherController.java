@@ -5,6 +5,7 @@ import com.smartschedule.dto.PasswordChangeDTO;
 import com.smartschedule.dto.TimetableChangeRequestDTO;
 import com.smartschedule.model.*;
 import com.smartschedule.model.enums.ChangeType;
+import com.smartschedule.model.enums.NotificationType;
 import com.smartschedule.model.enums.RequestStatus;
 import com.smartschedule.repository.PeriodRepository;
 import com.smartschedule.repository.TeacherRepository;
@@ -203,6 +204,17 @@ public class TeacherController {
         request.setStatus(RequestStatus.PENDING);
         timetableChangeRequestRepository.save(request);
 
+        // Notify admins about new timetable change request
+        String teacherName = teacher.getUser() != null ? teacher.getUser().getFullName() : "Faculty";
+        String slotInfo = entry.getDayOfWeek() + " Period " + (entry.getPeriod() != null ? entry.getPeriod().getPeriodNumber() : "");
+        String subName = entry.getSubject() != null ? entry.getSubject().getName() : "class";
+        String prop = dto.getRequestedChanges() != null && !dto.getRequestedChanges().trim().isEmpty() ? " Proposed: " + dto.getRequestedChanges() : "";
+        notificationService.notifyAdmins(
+                "New Timetable Change Request: " + teacherName,
+                teacherName + " requested to modify " + subName + " (" + slotInfo + ")." + prop,
+                NotificationType.TIMETABLE_CHANGE
+        );
+
         redirectAttributes.addFlashAttribute("successMessage", "Timetable change request submitted. Pending admin review.");
         return "redirect:/teacher/change-requests";
     }
@@ -226,6 +238,16 @@ public class TeacherController {
         request.setRequestedChanges("Class Cancellation Request");
         request.setStatus(RequestStatus.PENDING);
         timetableChangeRequestRepository.save(request);
+
+        // Notify admins about cancellation request
+        String teacherName = teacher.getUser() != null ? teacher.getUser().getFullName() : "Faculty";
+        String slotInfo = entry.getDayOfWeek() + " Period " + (entry.getPeriod() != null ? entry.getPeriod().getPeriodNumber() : "");
+        String subName = entry.getSubject() != null ? entry.getSubject().getName() : "class";
+        notificationService.notifyAdmins(
+                "Class Cancellation Request: " + teacherName,
+                teacherName + " requested cancellation for " + subName + " (" + slotInfo + "). Reason: " + reason,
+                NotificationType.CLASS_CANCELLATION
+        );
 
         redirectAttributes.addFlashAttribute("successMessage", "Cancellation request submitted. Pending admin review.");
         return "redirect:/teacher/change-requests";
