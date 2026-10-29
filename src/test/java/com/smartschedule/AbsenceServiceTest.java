@@ -44,6 +44,15 @@ class AbsenceServiceTest {
     @Mock
     private NotificationService notificationService;
 
+    @Mock
+    private com.smartschedule.service.AbsencePolicyService absencePolicyService;
+
+    @Mock
+    private com.smartschedule.service.ReplacementProposalService replacementProposalService;
+
+    @Mock
+    private com.smartschedule.service.OllamaService ollamaService;
+
     @InjectMocks
     private AbsenceService absenceService;
 
@@ -93,14 +102,19 @@ class AbsenceServiceTest {
             r.setId(100L);
             return r;
         });
-        when(timetableEntryRepository.findByTeacherAndDayOfWeekAndPublishedTrue(teacher, dto.getAbsenceDate().getDayOfWeek()))
+        when(timetableEntryRepository.findByTeacherAndDayOfWeekAndPublished(teacher, dto.getAbsenceDate().getDayOfWeek(), true))
                 .thenReturn(Collections.singletonList(entry));
+
+        when(absencePolicyService.validateAbsenceRequest(any(), any(), any(), any(), any()))
+                .thenReturn(com.smartschedule.dto.PolicyValidationResult.ok(1, 2, 1.0, 7));
+        when(replacementProposalService.calculateReplacementPlan(any()))
+                .thenReturn(new com.smartschedule.dto.ReplacementPlanDTO());
 
         AbsenceRequest saved = absenceService.submitAbsence(dto, teacher);
 
         assertNotNull(saved);
         assertEquals(RequestStatus.PENDING, saved.getStatus());
-        verify(absenceAffectedClassRepository, times(1)).save(any());
+        verify(absenceAffectedClassRepository, times(1)).saveAll(any());
     }
 
     @Test
@@ -118,6 +132,6 @@ class AbsenceServiceTest {
 
         assertEquals(RequestStatus.APPROVED, approved.getStatus());
         assertEquals("Approved by Principal", approved.getAdminComment());
-        verify(notificationService, times(1)).createNotification(eq(teacherUser), any(), any(), eq(NotificationType.ABSENCE_APPROVED));
+        verify(notificationService, times(1)).notifyTeacher(eq(teacher), any(), any(), eq(NotificationType.ABSENCE_APPROVED));
     }
 }

@@ -19,9 +19,45 @@
             <div class="page-header">
                 <div class="page-header-left">
                     <h1 class="page-title">Absence Request Detail</h1>
+                    <p class="text-muted" style="margin-top: 4px;">Evaluate institutional leave policy, auto-calculate substitute replacements, and publish validated timetable changes.</p>
                 </div>
-                <div class="page-header-actions">
+                <div class="page-header-actions" style="display: flex; gap: 8px;">
+                    <form th:action="@{'/admin/absence-requests/' + ${request.id} + '/calculate-replacements'}" method="post" style="display: inline;">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button type="submit" class="btn btn-primary btn-sm" style="background-color: #f59e0b; border: none;">🤖 Auto-Calculate Replacements</button>
+                    </form>
                     <a th:href="@{/admin/absence-requests}" class="btn btn-secondary btn-sm">← Back to All Requests</a>
+                </div>
+            </div>
+
+            <!-- Policy Violation Warning Banner -->
+            <div th:if="${request.policyViolated}" class="card mb-24" style="border-left: 5px solid #ef4444; background: var(--surface);">
+                <div style="display: flex; gap: 16px; align-items: flex-start;">
+                    <div style="font-size: 32px;">⚠️</div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 16px; font-weight: 700; color: #ef4444; margin-bottom: 4px;">
+                            POLICY ESCALATION: Institutional Absence Limit Exceeded
+                        </div>
+                        <p style="margin: 0 0 8px 0; color: var(--text-primary); font-size: 14px;" th:text="${request.policyViolationReason}">
+                            This request violates institutional absence limits.
+                        </p>
+                        <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px;">
+                            <span class="badge badge-warning" th:text="${'Week Submissions: ' + request.weeklyRequestCount + ' / ' + weeklyLimit + ' permitted'}">Week: 3 / 2</span>
+                            <span class="badge badge-warning" th:text="${'Month Leave Days: ' + request.monthlyLeaveDays + ' / ' + monthlyLimit + ' permitted'}">Month: 3.5 / 7</span>
+                            <span th:if="${request.adminOverride}" class="badge badge-approved" style="background: #10b981; color: white;">✓ Approved under Admin Override</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Assistant Summary Banner -->
+            <div th:if="${request.aiExplanation != null && !request.aiExplanation.isEmpty()}" class="card mb-24" style="border-left: 5px solid #3b82f6; background: var(--surface);">
+                <div style="display: flex; gap: 12px; align-items: flex-start;">
+                    <div style="font-size: 24px;">✨</div>
+                    <div>
+                        <div style="font-weight: 700; color: #3b82f6; margin-bottom: 4px;">AI Assistant Analysis:</div>
+                        <div style="font-size: 13.5px; line-height: 1.5;" th:text="${request.aiExplanation}">Summary</div>
+                    </div>
                 </div>
             </div>
 
@@ -59,19 +95,35 @@
                 <div th:if="${request.status.name() == 'PENDING'}" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border);">
                     <form th:action="@{'/admin/absence-requests/' + ${request.id} + '/approve'}" method="post" style="display: inline-block; margin-right: 12px;">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                        <input type="text" name="adminComment" placeholder="Optional admin approval comment" class="form-control" style="display: inline-block; width: 300px; margin-right: 8px;">
-                        <button type="submit" class="btn btn-primary">✓ Approve Absence</button>
+                        <input type="text" name="adminComment" placeholder="Optional administrative decision note" class="form-control" style="display: inline-block; width: 300px; margin-right: 8px;">
+                        <button type="submit" class="btn btn-primary">✓ Approve Leave Request</button>
                     </form>
 
                     <form th:action="@{'/admin/absence-requests/' + ${request.id} + '/reject'}" method="post" style="display: inline-block;">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                         <input type="text" name="adminComment" placeholder="Reason for rejection" required class="form-control" style="display: inline-block; width: 250px; margin-right: 8px;">
-                        <button type="submit" class="btn btn-secondary" style="background-color: #ef4444; color: white;">✗ Reject Absence</button>
+                        <button type="submit" class="btn btn-secondary" style="background-color: #ef4444; color: white;">✗ Reject Leave Request</button>
                     </form>
                 </div>
 
-                <div th:if="${request.adminComment != null && !request.adminComment.isEmpty()}" style="margin-top: 16px; padding: 12px; background-color: #f8f9fa; border-radius: 6px;">
+                <div th:if="${request.adminComment != null && !request.adminComment.isEmpty()}" style="margin-top: 16px; padding: 12px; background-color: var(--surface-2); border-radius: 6px;">
                     <strong>Admin Decision Comment:</strong> <span th:text="${request.adminComment}">Comment</span>
+                </div>
+            </div>
+
+            <!-- Proposed Replacements Summary Card -->
+            <div class="card mb-24" th:if="${hasProposedReplacements && request.status.name() == 'APPROVED'}">
+                <div class="card-header flex-between flex-center">
+                    <div>
+                        <span class="card-title">🤖 Proposed Replacement Plan (Solver-Optimized)</span>
+                        <div class="text-muted" style="font-size: 13px; margin-top: 2px;">Replacements have been automatically calculated based on qualifications, conflict avoidance, and balanced faculty workload.</div>
+                    </div>
+                    <div>
+                        <form th:action="@{'/admin/absence-requests/' + ${request.id} + '/apply-replacements'}" method="post" onsubmit="return confirm('Publish this replacement plan? Assigned substitute teachers and section students will be notified immediately.');">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="btn btn-primary">🚀 Confirm & Publish Replacement Plan</button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
@@ -91,11 +143,12 @@
                     <table class="data-table">
                         <thead>
                         <tr>
-                            <th style="width: 15%;">Period & Time</th>
-                            <th style="width: 20%;">Section & Subject</th>
-                            <th style="width: 15%;">Classroom</th>
-                            <th style="width: 15%;">Current Status</th>
-                            <th style="width: 35%;">Assign Substitute or Cancel Class</th>
+                            <th style="width: 14%;">Period & Time</th>
+                            <th style="width: 18%;">Section & Subject</th>
+                            <th style="width: 12%;">Classroom</th>
+                            <th style="width: 26%;">Auto-Proposed Substitute & Reason</th>
+                            <th style="width: 12%;">Current Status</th>
+                            <th style="width: 18%;">Manual Action</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -110,30 +163,41 @@
                             </td>
                             <td><span th:text="${ac.timetableEntry.classroom != null ? ac.timetableEntry.classroom.name : '-'}">Room 101</span></td>
                             <td>
-                                <span th:if="${ac.resolution.name() == 'PENDING'}" class="badge badge-pending">Pending Sub</span>
+                                <div th:if="${ac.proposedSubstitute != null}">
+                                    <strong style="color: #10b981;" th:text="${ac.proposedSubstitute.user.fullName + ' (' + ac.proposedSubstitute.teacherId + ')'}">Prof. Sharma</strong>
+                                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;" th:text="${ac.proposalReason}">Qualified, free slot</div>
+                                </div>
+                                <div th:if="${ac.proposedSubstitute == null}">
+                                    <span class="badge badge-rejected" style="background-color: #ef4444; color: white;">UNRESOLVED</span>
+                                    <div style="font-size: 12px; color: #ef4444; margin-top: 2px;" th:text="${ac.proposalReason != null ? ac.proposalReason : 'No eligible teacher free'}">No candidate</div>
+                                </div>
+                            </td>
+                            <td>
+                                <span th:if="${ac.resolution.name() == 'PENDING'}" class="badge badge-pending">Pending Decision</span>
                                 <span th:if="${ac.resolution.name() == 'SUBSTITUTE_ASSIGNED'}" class="badge badge-approved">Substitute Assigned</span>
                                 <span th:if="${ac.resolution.name() == 'CANCELLED'}" class="badge badge-rejected">CANCELLED</span>
                             </td>
                             <td>
-                                <!-- Substitute Assignment Form -->
-                                <form th:action="@{/admin/substitutes/assign}" method="post" style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                                <!-- Individual Substitute Assignment Form -->
+                                <form th:action="@{/admin/substitutes/assign}" method="post" style="display: flex; gap: 4px; align-items: center; margin-bottom: 6px;">
                                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                                     <input type="hidden" name="affectedClassId" th:value="${ac.id}"/>
 
-                                    <select name="substituteTeacherId" class="form-control form-select" required style="font-size: 13px;">
-                                        <option value="">-- Assign Free Faculty --</option>
+                                    <select name="substituteTeacherId" class="form-control form-select" required style="font-size: 12px; padding: 4px 6px;">
+                                        <option value="">-- Manual Override --</option>
                                         <option th:each="avail : ${availableTeachersMap.get(ac.id)}"
                                                 th:value="${avail.id}"
+                                                th:selected="${ac.proposedSubstitute != null && ac.proposedSubstitute.id == avail.id}"
                                                 th:text="${avail.user.fullName + ' (' + avail.teacherId + ')'}">Dr. Patel</option>
                                     </select>
-                                    <button type="submit" class="btn btn-primary btn-sm" style="white-space: nowrap;">Assign Sub</button>
+                                    <button type="submit" class="btn btn-primary btn-sm" style="white-space: nowrap; padding: 4px 8px; font-size: 11px;">Assign</button>
                                 </form>
 
                                 <!-- Cancel Class Button -->
                                 <form th:action="@{/admin/substitutes/cancel-class}" method="post" onsubmit="return confirm('Cancel this specific class? Students in this section will be notified.');">
                                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                                     <input type="hidden" name="affectedClassId" th:value="${ac.id}"/>
-                                    <button type="submit" class="btn btn-secondary btn-sm" style="background-color: #ef4444; color: white; border: none; font-size: 12px;">🚫 Cancel Class</button>
+                                    <button type="submit" class="btn btn-secondary btn-sm" style="background-color: #ef4444; color: white; border: none; font-size: 11px; padding: 3px 6px;">🚫 Cancel Class</button>
                                 </form>
                             </td>
                         </tr>

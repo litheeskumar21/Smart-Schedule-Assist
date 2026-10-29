@@ -1,19 +1,20 @@
 package com.smartschedule.controller;
 
+import com.smartschedule.dto.AbsenceRequestDTO;
+import com.smartschedule.dto.PolicyValidationResult;
 import com.smartschedule.model.*;
+import com.smartschedule.model.enums.AbsenceType;
 import com.smartschedule.model.enums.UserRole;
 import com.smartschedule.repository.PeriodRepository;
 import com.smartschedule.repository.UserRepository;
-import com.smartschedule.service.StudentService;
-import com.smartschedule.service.SubstituteService;
-import com.smartschedule.service.TeacherService;
-import com.smartschedule.service.TimetableService;
+import com.smartschedule.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,19 +30,25 @@ public class ApiController {
     private final StudentService studentService;
     private final TeacherService teacherService;
     private final PeriodRepository periodRepository;
+    private final OllamaService ollamaService;
+    private final AbsencePolicyService absencePolicyService;
 
     public ApiController(TimetableService timetableService,
                          SubstituteService substituteService,
                          UserRepository userRepository,
                          StudentService studentService,
                          TeacherService teacherService,
-                         PeriodRepository periodRepository) {
+                         PeriodRepository periodRepository,
+                         OllamaService ollamaService,
+                         AbsencePolicyService absencePolicyService) {
         this.timetableService = timetableService;
         this.substituteService = substituteService;
         this.userRepository = userRepository;
         this.studentService = studentService;
         this.teacherService = teacherService;
         this.periodRepository = periodRepository;
+        this.ollamaService = ollamaService;
+        this.absencePolicyService = absencePolicyService;
     }
 
     private User getCurrentUser() {
@@ -97,6 +104,46 @@ public class ApiController {
             }).collect(Collectors.toList());
 
             return ResponseEntity.ok(list);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/ai/status")
+    public ResponseEntity<?> getAiStatus() {
+        boolean available = ollamaService.isOllamaAvailable();
+        List<String> models = ollamaService.getAvailableModels();
+        return ResponseEntity.ok(Map.of(
+                "online", available,
+                "models", models,
+                "configuredModel", "qwen2.5:3b"
+        ));
+    }
+
+    @PostMapping("/ai/parse-absence")
+    public ResponseEntity<?> parseAbsenceWithAi(@RequestBody Map<String, String> payload) {
+        String prompt = payload.get("prompt");
+        if (prompt == null || prompt.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Prompt is required"));
+        }
+        AbsenceRequestDTO parsed = ollamaService.parseAbsencePrompt(prompt);
+        return ResponseEntity.ok(parsed);
+    }
+
+    @GetMapping("/policy/check")
+    public ResponseEntity<?> checkPolicy(@RequestParam String date, @RequestParam(defaultValue = "FULL_DAY") String type) {
+        User user = getCurrentUser();
+        if (user.getRole() != UserRole.ROLE_TEACHER) {
+            return ResponseEntity.ok(Map.of("valid", true));
+        }
+        try {
+            Teacher teacher = teacherService.getTeacherByUser(user);
+            LocalDate absenceDate = LocalDate.parse(date);
+            AbsenceType absenceType = AbsenceType.valueOf(type.toUpperCase());
+
+            PolicyValidationResult result = absencePolicyService.validateAbsenceRequest(
+                    teacher, absenceDate, absenceType, null, null);
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

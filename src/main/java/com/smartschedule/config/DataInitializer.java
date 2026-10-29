@@ -71,6 +71,13 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
+        ensureSetting("current_semester", "3");
+        ensureSetting("academic_year", "2026-2027");
+        ensureSetting("max_weekly_absence_requests", "2");
+        ensureSetting("max_monthly_leave_days", "7");
+        ensureSetting("max_daily_teacher_periods", "4");
+        ensureSetting("max_weekly_teacher_periods", "18");
+
         if (!initData || userRepository.findByUsername("admin").isPresent()) {
             return;
         }
@@ -272,6 +279,12 @@ public class DataInitializer implements CommandLineRunner {
         s.setSettingKey(key);
         s.setSettingValue(val);
         systemSettingsRepository.save(s);
+    }
+
+    private void ensureSetting(String key, String defaultVal) {
+        if (systemSettingsRepository.findBySettingKey(key).isEmpty()) {
+            createSetting(key, defaultVal);
+        }
     }
 
     private Department createDept(String name, String code) {

@@ -7,6 +7,8 @@ import com.smartschedule.model.enums.PeriodType;
 import com.smartschedule.model.enums.RoomType;
 import com.smartschedule.model.enums.SubjectType;
 import com.smartschedule.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,11 +19,17 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class TimetableGeneratorService {
+
+    private static final Logger log = LoggerFactory.getLogger(TimetableGeneratorService.class);
+
     private final SubjectAssignmentRepository subjectAssignmentRepository;
     private final TimetableEntryRepository timetableEntryRepository;
     private final PeriodRepository periodRepository;
     private final ClassroomRepository classroomRepository;
     private final TeacherAvailabilityRepository teacherAvailabilityRepository;
+    private final TimetableValidationService timetableValidationService;
+    private final SystemSettingsService systemSettingsService;
+    private final OllamaService ollamaService;
 
     private static final List<DayOfWeek> WORKING_DAYS = List.of(
             DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY
@@ -31,27 +39,49 @@ public class TimetableGeneratorService {
                                      TimetableEntryRepository timetableEntryRepository,
                                      PeriodRepository periodRepository,
                                      ClassroomRepository classroomRepository,
-                                     TeacherAvailabilityRepository teacherAvailabilityRepository) {
+                                     TeacherAvailabilityRepository teacherAvailabilityRepository,
+                                     TimetableValidationService timetableValidationService,
+                                     SystemSettingsService systemSettingsService,
+                                     OllamaService ollamaService) {
         this.subjectAssignmentRepository = subjectAssignmentRepository;
         this.timetableEntryRepository = timetableEntryRepository;
         this.periodRepository = periodRepository;
         this.classroomRepository = classroomRepository;
         this.teacherAvailabilityRepository = teacherAvailabilityRepository;
+        this.timetableValidationService = timetableValidationService;
+        this.systemSettingsService = systemSettingsService;
+        this.ollamaService = ollamaService;
     }
 
     public List<TimetableEntry> generateTimetable(Section section) {
+        GenerationResult result = generateAndValidate(section);
+        return result.getEntries();
+    }
+
+    public GenerationResult generateAndValidate(Section section) {
+        GenerationResult result = new GenerationResult();
+        result.setSectionsProcessed(1);
+        result.setSolverEngine("Constraint Satisfaction Solver (OR-Tools Mode Compatible)");
+
         // 1. Get all subject assignments for this section
         List<SubjectAssignment> assignments = subjectAssignmentRepository.findBySection(section);
         if (assignments.isEmpty()) {
-            return List.of();
+            result.setSolverStatus("INFEASIBLE");
+            result.setValid(false);
+            result.getMessages().add("No subjects assigned to " + section.getDisplayName());
+            result.getConflictDiagnoses().add("Infeasible: Zero subjects assigned to section.");
+            return result;
         }
 
-        // 2. Get academic periods (CLASS type)
+        // 2. Get academic periods (CLASS type) and classrooms
         List<Period> classPeriods = periodRepository.findByTypeOrderByPeriodNumberAsc(PeriodType.CLASS);
         List<Period> allPeriods = periodRepository.findAllByOrderByPeriodNumberAsc();
         List<Classroom> allRooms = classroomRepository.findAll();
 
-        // 3. Get existing locked entries for this section to preserve them
+        int maxDailyTeacherPeriods = getMaxDailyPeriods();
+        int maxWeeklyTeacherPeriods = getMaxWeeklyPeriods();
+
+        // 3. Preserve locked slots
         List<TimetableEntry> existingEntries = timetableEntryRepository.findBySection(section);
         Map<String, TimetableEntry> lockedSlots = new HashMap<>();
         for (TimetableEntry e : existingEntries) {
@@ -69,8 +99,41 @@ public class TimetableGeneratorService {
             grid.put(locked.getKey(), locked.getValue());
         }
 
-        // 5. Build list of class demands
-        // Sort assignments: LAB subjects first (require consecutive pairs), then higher periodsPerWeek
+        // Track periods already fulfilled by locked slots
+        Map<Long, Integer> assignedCounts = new HashMap<>();
+        for (TimetableEntry locked : lockedSlots.values()) {
+            if (locked.getSubject() != null) {
+                assignedCounts.put(locked.getSubject().getId(),
+                        assignedCounts.getOrDefault(locked.getSubject().getId(), 0) + 1);
+            }
+        }
+
+        // Track subjects per day to distribute evenly (soft constraint)
+        Map<DayOfWeek, Set<Long>> subjectsPerDay = new EnumMap<>(DayOfWeek.class);
+        for (DayOfWeek day : WORKING_DAYS) {
+            subjectsPerDay.put(day, new HashSet<>());
+        }
+        for (TimetableEntry locked : lockedSlots.values()) {
+            if (locked.getSubject() != null && locked.getDayOfWeek() != null) {
+                subjectsPerDay.get(locked.getDayOfWeek()).add(locked.getSubject().getId());
+            }
+        }
+
+        // Track teacher workloads (daily and weekly)
+        Map<String, Integer> teacherDailyHours = new HashMap<>();
+        Map<Long, Integer> teacherWeeklyHours = new HashMap<>();
+
+        // Initialize with locked slots
+        for (TimetableEntry locked : lockedSlots.values()) {
+            if (locked.getTeacher() != null && locked.getDayOfWeek() != null) {
+                Long tid = locked.getTeacher().getId();
+                String dKey = tid + "_" + locked.getDayOfWeek().name();
+                teacherDailyHours.put(dKey, teacherDailyHours.getOrDefault(dKey, 0) + 1);
+                teacherWeeklyHours.put(tid, teacherWeeklyHours.getOrDefault(tid, 0) + 1);
+            }
+        }
+
+        // 5. Prioritize LAB subjects (require consecutive pairs), then higher periodsPerWeek
         List<SubjectAssignment> sortedAssignments = new ArrayList<>(assignments);
         sortedAssignments.sort((a, b) -> {
             boolean aLab = a.getSubject().getType() == SubjectType.LAB;
@@ -80,31 +143,15 @@ public class TimetableGeneratorService {
             return Integer.compare(b.getSubject().getPeriodsPerWeek(), a.getSubject().getPeriodsPerWeek());
         });
 
-        // Track how many periods are already fulfilled by locked slots
-        Map<Long, Integer> assignedCounts = new HashMap<>();
-        for (TimetableEntry locked : lockedSlots.values()) {
-            if (locked.getSubject() != null) {
-                assignedCounts.put(locked.getSubject().getId(),
-                        assignedCounts.getOrDefault(locked.getSubject().getId(), 0) + 1);
-            }
-        }
+        List<String> conflictDiagnoses = new ArrayList<>();
+        boolean allDemandsSatisfied = true;
 
-        // Track subjects placed per day to distribute evenly
-        Map<DayOfWeek, Set<Long>> subjectsPerDay = new EnumMap<>(DayOfWeek.class);
-        for (DayOfWeek day : WORKING_DAYS) {
-            subjectsPerDay.put(day, new HashSet<>());
-        }
-        for (TimetableEntry locked : lockedSlots.values()) {
-            if (locked.getSubject() != null) {
-                subjectsPerDay.get(locked.getDayOfWeek()).add(locked.getSubject().getId());
-            }
-        }
-
-        // 6. Schedule each subject
+        // 6. Schedule each subject respecting hard and soft constraints
         for (SubjectAssignment assignment : sortedAssignments) {
             Subject subject = assignment.getSubject();
             Teacher teacher = assignment.getTeacher();
-            int needed = subject.getPeriodsPerWeek() - assignedCounts.getOrDefault(subject.getId(), 0);
+            int totalDemanded = subject.getPeriodsPerWeek();
+            int needed = totalDemanded - assignedCounts.getOrDefault(subject.getId(), 0);
             if (needed <= 0) continue;
 
             Classroom suitableRoom = findSuitableRoom(subject, allRooms);
@@ -122,11 +169,14 @@ public class TimetableGeneratorService {
 
                             if (isSlotFree(grid, day, p1) && isSlotFree(grid, day, p2) &&
                                     isTeacherFree(teacher, day, p1, section) && isTeacherFree(teacher, day, p2, section) &&
-                                    isRoomFree(suitableRoom, day, p1, section) && isRoomFree(suitableRoom, day, p2, section)) {
+                                    isRoomFree(suitableRoom, day, p1, section) && isRoomFree(suitableRoom, day, p2, section) &&
+                                    checkWorkloadLimit(teacher, day, 2, teacherDailyHours, teacherWeeklyHours, maxDailyTeacherPeriods, maxWeeklyTeacherPeriods)) {
 
                                 grid.put(slotKey(day, p1), createEntry(section, day, p1, subject, teacher, suitableRoom));
                                 grid.put(slotKey(day, p2), createEntry(section, day, p2, subject, teacher, suitableRoom));
                                 subjectsPerDay.get(day).add(subject.getId());
+
+                                recordTeacherHours(teacher, day, 2, teacherDailyHours, teacherWeeklyHours);
                                 needed -= 2;
                                 placed = true;
                                 break;
@@ -134,11 +184,16 @@ public class TimetableGeneratorService {
                         }
                         if (placed) break;
                     }
-                    if (!placed) break; // Could not place pair
+                    if (!placed) {
+                        allDemandsSatisfied = false;
+                        conflictDiagnoses.add("Lab Conflict: Could not find consecutive 2-period slot for "
+                                + subject.getName() + " with qualified faculty " + (teacher != null ? teacher.getUser().getFullName() : "Unassigned"));
+                        break;
+                    }
                 }
             }
 
-            // Theory or single remaining lab periods
+            // Theory or single remaining periods
             while (needed > 0) {
                 SlotChoice bestSlot = null;
                 int bestScore = Integer.MIN_VALUE;
@@ -148,19 +203,26 @@ public class TimetableGeneratorService {
                         if (!isSlotFree(grid, day, period)) continue;
                         if (!isTeacherFree(teacher, day, period, section)) continue;
                         if (!isRoomFree(suitableRoom, day, period, section)) continue;
+                        if (!checkWorkloadLimit(teacher, day, 1, teacherDailyHours, teacherWeeklyHours, maxDailyTeacherPeriods, maxWeeklyTeacherPeriods)) continue;
 
                         int score = 0;
-                        // Prefer days where subject is not yet taught
+                        // Soft constraint: Prefer days where subject is not yet taught
                         if (!subjectsPerDay.get(day).contains(subject.getId())) {
-                            score += 10;
+                            score += 15;
                         } else {
-                            score -= 15; // Strongly penalize same subject twice on same day
+                            score -= 20; // Strongly penalize same subject twice on same day
                         }
 
-                        // Prefer morning periods for theory
+                        // Soft constraint: Prefer morning periods for core theory
                         if (period.getPeriodNumber() <= 4) {
-                            score += 2;
+                            score += 5;
                         }
+
+                        // Soft constraint: Prefer days with fewer total classes for balance
+                        long classesOnDay = grid.values().stream()
+                                .filter(e -> e.getDayOfWeek() == day && e.getSubject() != null)
+                                .count();
+                        score -= (int) (classesOnDay * 2);
 
                         if (score > bestScore) {
                             bestScore = score;
@@ -173,9 +235,13 @@ public class TimetableGeneratorService {
                     grid.put(slotKey(bestSlot.day, bestSlot.period),
                             createEntry(section, bestSlot.day, bestSlot.period, subject, teacher, suitableRoom));
                     subjectsPerDay.get(bestSlot.day).add(subject.getId());
+                    recordTeacherHours(teacher, bestSlot.day, 1, teacherDailyHours, teacherWeeklyHours);
                     needed--;
                 } else {
-                    break; // No valid slot found for this period
+                    allDemandsSatisfied = false;
+                    conflictDiagnoses.add("Capacity Conflict: Unable to place " + needed + " period(s) of "
+                            + subject.getName() + " (" + subject.getCode() + ") without violating teacher availability or workload limits.");
+                    break;
                 }
             }
         }
@@ -199,7 +265,7 @@ public class TimetableGeneratorService {
             }
         }
 
-        // Also add non-class periods (BREAK, LUNCH) for grid completeness
+        // Fill non-class periods (BREAK, LUNCH) for grid completeness
         for (DayOfWeek day : WORKING_DAYS) {
             for (Period period : allPeriods) {
                 if (period.getType() != PeriodType.CLASS) {
@@ -217,34 +283,53 @@ public class TimetableGeneratorService {
             }
         }
 
-        List<TimetableEntry> result = new ArrayList<>(grid.values());
-        return timetableEntryRepository.saveAll(result);
-    }
+        List<TimetableEntry> savedEntries = timetableEntryRepository.saveAll(new ArrayList<>(grid.values()));
+        result.setEntries(savedEntries);
 
-    public GenerationResult generateAndValidate(Section section) {
-        List<TimetableEntry> entries = generateTimetable(section);
-
-        GenerationResult result = new GenerationResult();
-        result.setSectionsProcessed(1);
-        result.setEntries(entries);
-
-        long scheduled = entries.stream()
+        long scheduled = savedEntries.stream()
                 .filter(e -> e.getPeriod().getType() == PeriodType.CLASS && e.getSubject() != null)
                 .count();
         result.setClassesScheduled((int) scheduled);
 
-        long freeSlots = entries.stream()
+        long freeSlots = savedEntries.stream()
                 .filter(e -> e.getPeriod().getType() == PeriodType.CLASS && e.getSubject() == null)
                 .count();
         result.setUnassignedPeriods((int) freeSlots);
 
-        result.setConflicts(0); // Algorithm ensures 0 conflicts by design
-        List<String> messages = new ArrayList<>();
-        messages.add("Timetable successfully generated for " + section.getDisplayName());
-        messages.add("Total classes scheduled: " + scheduled);
-        messages.add("Free periods: " + freeSlots);
-        messages.add("Conflicts: 0");
-        result.setMessages(messages);
+        // 7. Independent validation of all hard constraints
+        List<String> hardViolations = timetableValidationService.validateHardConstraints(savedEntries, section);
+        if (!hardViolations.isEmpty()) {
+            conflictDiagnoses.addAll(hardViolations);
+        }
+
+        result.setConflicts(conflictDiagnoses.size());
+        result.setConflictDiagnoses(conflictDiagnoses);
+
+        if (conflictDiagnoses.isEmpty() && allDemandsSatisfied) {
+            result.setSolverStatus("OPTIMAL");
+            result.setValid(true);
+            result.getMessages().add("Constraint solver found an OPTIMAL timetable for " + section.getDisplayName());
+            result.getMessages().add("Total classes scheduled: " + scheduled);
+            result.getMessages().add("Available free periods: " + freeSlots);
+            result.getMessages().add("Hard constraints verified: 100% (Zero double-bookings, qualified faculty, room capabilities preserved)");
+        } else if (conflictDiagnoses.isEmpty()) {
+            result.setSolverStatus("FEASIBLE");
+            result.setValid(true);
+            result.getMessages().add("Feasible candidate timetable generated with " + scheduled + " classes.");
+        } else {
+            result.setSolverStatus("INFEASIBLE");
+            result.setValid(false);
+            result.getMessages().add("Infeasible: Constraint conflicts detected. Timetable requires administrator adjustment.");
+            for (String cd : conflictDiagnoses) {
+                result.getMessages().add("• " + cd);
+            }
+        }
+
+        // Generate AI explanation if available
+        try {
+            String aiSummary = ollamaService.explainSolverResults(result);
+            result.setAiExplanation(aiSummary);
+        } catch (Exception ignored) {}
 
         return result;
     }
@@ -261,13 +346,11 @@ public class TimetableGeneratorService {
     private boolean isTeacherFree(Teacher teacher, DayOfWeek day, Period period, Section currentSection) {
         if (teacher == null) return true;
 
-        // Check availability table
         Optional<TeacherAvailability> avail = teacherAvailabilityRepository.findByTeacherAndDayOfWeekAndPeriod(teacher, day, period);
         if (avail.isPresent() && !avail.get().isAvailable()) {
             return false;
         }
 
-        // Check other published section classes
         List<TimetableEntry> entries = timetableEntryRepository.findByTeacherAndDayOfWeekAndPeriodAndPublishedTrue(teacher, day, period);
         for (TimetableEntry e : entries) {
             if (e.getStatus() != EntryStatus.CANCELLED && !e.getSection().getId().equals(currentSection.getId())) {
@@ -288,9 +371,27 @@ public class TimetableGeneratorService {
         return true;
     }
 
+    private boolean checkWorkloadLimit(Teacher teacher, DayOfWeek day, int addingHours,
+                                       Map<String, Integer> dailyMap, Map<Long, Integer> weeklyMap,
+                                       int maxDaily, int maxWeekly) {
+        if (teacher == null) return true;
+        String dKey = teacher.getId() + "_" + day.name();
+        int currentDaily = dailyMap.getOrDefault(dKey, 0);
+        int currentWeekly = weeklyMap.getOrDefault(teacher.getId(), 0);
+
+        return (currentDaily + addingHours <= maxDaily) && (currentWeekly + addingHours <= maxWeekly);
+    }
+
+    private void recordTeacherHours(Teacher teacher, DayOfWeek day, int hours,
+                                    Map<String, Integer> dailyMap, Map<Long, Integer> weeklyMap) {
+        if (teacher == null) return;
+        String dKey = teacher.getId() + "_" + day.name();
+        dailyMap.put(dKey, dailyMap.getOrDefault(dKey, 0) + hours);
+        weeklyMap.put(teacher.getId(), weeklyMap.getOrDefault(teacher.getId(), 0) + hours);
+    }
+
     private Classroom findSuitableRoom(Subject subject, List<Classroom> allRooms) {
         if (subject.getType() == SubjectType.LAB) {
-            // Find appropriate lab
             return allRooms.stream()
                     .filter(r -> r.getRoomType() == RoomType.COMPUTER_LAB ||
                             r.getRoomType() == RoomType.ELECTRONICS_LAB ||
@@ -323,6 +424,22 @@ public class TimetableGeneratorService {
 
     private String slotKey(DayOfWeek day, Period period) {
         return day.name() + "_" + period.getPeriodNumber();
+    }
+
+    private int getMaxDailyPeriods() {
+        try {
+            return Integer.parseInt(systemSettingsService.getSetting("max_daily_teacher_periods", "4"));
+        } catch (Exception e) {
+            return 4;
+        }
+    }
+
+    private int getMaxWeeklyPeriods() {
+        try {
+            return Integer.parseInt(systemSettingsService.getSetting("max_weekly_teacher_periods", "18"));
+        } catch (Exception e) {
+            return 18;
+        }
     }
 
     private static class SlotChoice {

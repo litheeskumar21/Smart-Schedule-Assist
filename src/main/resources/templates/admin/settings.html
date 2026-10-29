@@ -15,19 +15,22 @@
         <div class="content-wrapper">
             <div class="page-header">
                 <div class="page-header-left">
-                    <h1 class="page-title">System Settings</h1>
+                    <h1 class="page-title">System & Policy Settings</h1>
+                    <p class="text-muted" style="margin-top: 4px;">Configure institutional leave policies, timetable generation constraints, and academic terms.</p>
                 </div>
             </div>
 
             <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
             <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
 
-            <div class="card mb-24" style="max-width: 600px;">
+            <div class="card mb-24" style="max-width: 800px;">
                 <div class="card-header">
-                    <span class="card-title">⚙️ Academic Year & Semester Configuration</span>
+                    <span class="card-title">⚙️ Academic Terms & Institutional Policies</span>
                 </div>
                 <form th:action="@{/admin/settings}" method="post" style="margin-top: 16px;">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    
+                    <h4 style="margin: 0 0 12px 0; color: var(--text-primary); font-size: 14px; font-weight: 700;">1. Academic Calendar</h4>
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Current Academic Year</label>
@@ -38,8 +41,37 @@
                             <input type="text" name="currentSemester" class="form-control" required th:value="${currentSemester}" placeholder="e.g., 3">
                         </div>
                     </div>
-                    <div style="margin-top: 12px;">
-                        <button type="submit" class="btn btn-primary">Save Academic Settings</button>
+
+                    <h4 style="margin: 16px 0 12px 0; color: var(--text-primary); font-size: 14px; font-weight: 700; border-top: 1px solid var(--border); padding-top: 16px;">2. Faculty Absence Policy Thresholds</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Max Absence Requests per Week (Mon - Sun)</label>
+                            <input type="number" name="maxWeeklyAbsenceRequests" class="form-control" min="1" max="10" required th:value="${maxWeeklyAbsenceRequests}" placeholder="2">
+                            <div class="text-muted" style="font-size: 11px; margin-top: 4px;">Submissions above this limit automatically trigger Admin Policy Escalation.</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Max Leave Days per Calendar Month</label>
+                            <input type="number" name="maxMonthlyLeaveDays" class="form-control" min="1" max="31" required th:value="${maxMonthlyLeaveDays}" placeholder="7">
+                            <div class="text-muted" style="font-size: 11px; margin-top: 4px;">Total leave days (Full=1, Half=0.5) allowed per teacher each calendar month.</div>
+                        </div>
+                    </div>
+
+                    <h4 style="margin: 16px 0 12px 0; color: var(--text-primary); font-size: 14px; font-weight: 700; border-top: 1px solid var(--border); padding-top: 16px;">3. Faculty Workload Limits (Hard Constraints)</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Max Daily Teaching Periods per Faculty</label>
+                            <input type="number" name="maxDailyTeacherPeriods" class="form-control" min="1" max="8" required th:value="${maxDailyTeacherPeriods}" placeholder="4">
+                            <div class="text-muted" style="font-size: 11px; margin-top: 4px;">Solver will never schedule or substitute beyond this daily load.</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Max Weekly Teaching Periods per Faculty</label>
+                            <input type="number" name="maxWeeklyTeacherPeriods" class="form-control" min="1" max="40" required th:value="${maxWeeklyTeacherPeriods}" placeholder="18">
+                            <div class="text-muted" style="font-size: 11px; margin-top: 4px;">Maximum total classes across Monday to Friday.</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <button type="submit" class="btn btn-primary">Save All Settings & Policy Limits</button>
                     </div>
                 </form>
             </div>

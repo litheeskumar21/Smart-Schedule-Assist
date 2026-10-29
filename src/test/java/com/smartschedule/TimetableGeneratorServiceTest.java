@@ -39,6 +39,15 @@ class TimetableGeneratorServiceTest {
     @Mock
     private TeacherAvailabilityRepository teacherAvailabilityRepository;
 
+    @Mock
+    private com.smartschedule.service.TimetableValidationService timetableValidationService;
+
+    @Mock
+    private com.smartschedule.service.SystemSettingsService systemSettingsService;
+
+    @Mock
+    private com.smartschedule.service.OllamaService ollamaService;
+
     @InjectMocks
     private TimetableGeneratorService timetableGeneratorService;
 
@@ -123,10 +132,11 @@ class TimetableGeneratorServiceTest {
     void testGenerateTimetableSuccess() {
         when(subjectAssignmentRepository.findBySection(section)).thenReturn(assignments);
         when(periodRepository.findByTypeOrderByPeriodNumberAsc(PeriodType.CLASS)).thenReturn(periods);
-        when(timetableEntryRepository.findBySectionAndLockedTrue(section)).thenReturn(new ArrayList<>());
+        when(periodRepository.findAllByOrderByPeriodNumberAsc()).thenReturn(periods);
+        when(timetableEntryRepository.findBySection(section)).thenReturn(new ArrayList<>());
         when(classroomRepository.findAll()).thenReturn(classrooms);
-        when(timetableEntryRepository.findByDayOfWeekAndPeriod(any(), any())).thenReturn(new ArrayList<>());
         when(timetableEntryRepository.saveAll(any())).thenAnswer(i -> i.getArgument(0));
+        when(timetableValidationService.validateHardConstraints(any(), any())).thenReturn(Collections.emptyList());
 
         GenerationResult result = timetableGeneratorService.generateAndValidate(section);
 

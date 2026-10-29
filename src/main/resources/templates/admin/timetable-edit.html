@@ -37,11 +37,38 @@
             <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
             <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
 
-            <div th:if="${generationResult != null}" class="alert alert-info" style="margin-bottom: 20px;">
-                <div style="font-weight: 700; margin-bottom: 4px;">⚡ Generation Algorithm Results:</div>
-                <ul style="margin-left: 20px;">
-                    <li th:each="msg : ${generationResult.messages}" th:text="${msg}">Message</li>
-                </ul>
+            <div th:if="${generationResult != null}" class="card mb-24" style="background: var(--surface); border-left: 5px solid var(--primary);">
+                <div class="card-header flex-between flex-center">
+                    <div>
+                        <span class="card-title">⚡ Constraint Solver Optimization Results</span>
+                        <div class="text-muted" style="font-size: 12px; margin-top: 2px;">
+                            Engine: <strong th:text="${generationResult.solverEngine}">Solver</strong>
+                        </div>
+                    </div>
+                    <div>
+                        <span th:if="${generationResult.solverStatus == 'OPTIMAL'}" class="badge badge-approved" style="background: #10b981; color: white; font-weight: 700;">✓ OPTIMAL SOLUTION</span>
+                        <span th:if="${generationResult.solverStatus == 'FEASIBLE'}" class="badge badge-published" style="font-weight: 700;">✓ FEASIBLE SOLUTION</span>
+                        <span th:if="${generationResult.solverStatus == 'INFEASIBLE'}" class="badge badge-rejected" style="background: #ef4444; color: white; font-weight: 700;">⚠️ INFEASIBLE (CONFLICTS DETECTED)</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 14px;">
+                    <div th:if="${generationResult.aiExplanation != null && !generationResult.aiExplanation.isEmpty()}" style="margin-bottom: 12px; padding: 10px 14px; background: var(--surface-2); border-radius: 6px;">
+                        <span style="color: #3b82f6; font-weight: 600;">✨ AI Optimization Summary:</span>
+                        <span th:text="${generationResult.aiExplanation}" style="font-size: 13.5px; margin-left: 4px;">Summary</span>
+                    </div>
+
+                    <ul style="margin: 0 0 0 20px; font-size: 13.5px; line-height: 1.6;">
+                        <li th:each="msg : ${generationResult.messages}" th:text="${msg}">Message</li>
+                    </ul>
+
+                    <div th:if="${!generationResult.conflictDiagnoses.isEmpty()}" style="margin-top: 12px; padding: 10px 14px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 6px;">
+                        <strong style="color: #ef4444;">Conflict Diagnostic Details:</strong>
+                        <ul style="margin: 6px 0 0 20px; color: #ef4444; font-size: 13px;">
+                            <li th:each="cd : ${generationResult.conflictDiagnoses}" th:text="${cd}">Conflict</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
 
             <!-- Editable Grid -->

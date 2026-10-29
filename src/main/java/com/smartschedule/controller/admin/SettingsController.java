@@ -42,6 +42,10 @@ public class SettingsController {
         User user = getCurrentUser();
         model.addAttribute("currentSemester", systemSettingsService.getCurrentSemester());
         model.addAttribute("academicYear", systemSettingsService.getAcademicYear());
+        model.addAttribute("maxWeeklyAbsenceRequests", systemSettingsService.getSetting("max_weekly_absence_requests", "2"));
+        model.addAttribute("maxMonthlyLeaveDays", systemSettingsService.getSetting("max_monthly_leave_days", "7"));
+        model.addAttribute("maxDailyTeacherPeriods", systemSettingsService.getSetting("max_daily_teacher_periods", "4"));
+        model.addAttribute("maxWeeklyTeacherPeriods", systemSettingsService.getSetting("max_weekly_teacher_periods", "18"));
         model.addAttribute("periods", systemSettingsService.getAllPeriods());
         model.addAttribute("unreadCount", notificationService.getUnreadCount(user));
         return "admin/settings";
@@ -50,13 +54,23 @@ public class SettingsController {
     @PostMapping
     public String updateSettings(@RequestParam String currentSemester,
                                  @RequestParam String academicYear,
+                                 @RequestParam(defaultValue = "2") String maxWeeklyAbsenceRequests,
+                                 @RequestParam(defaultValue = "7") String maxMonthlyLeaveDays,
+                                 @RequestParam(defaultValue = "4") String maxDailyTeacherPeriods,
+                                 @RequestParam(defaultValue = "18") String maxWeeklyTeacherPeriods,
                                  RedirectAttributes redirectAttributes) {
         User user = getCurrentUser();
         systemSettingsService.setCurrentSemester(currentSemester.trim());
         systemSettingsService.setAcademicYear(academicYear.trim());
+        systemSettingsService.setSetting("max_weekly_absence_requests", maxWeeklyAbsenceRequests.trim());
+        systemSettingsService.setSetting("max_monthly_leave_days", maxMonthlyLeaveDays.trim());
+        systemSettingsService.setSetting("max_daily_teacher_periods", maxDailyTeacherPeriods.trim());
+        systemSettingsService.setSetting("max_weekly_teacher_periods", maxWeeklyTeacherPeriods.trim());
+
         activityLogService.log("UPDATE_SETTINGS", "SystemSettings", null, user,
-                "Updated current semester to " + currentSemester + " and academic year to " + academicYear);
-        redirectAttributes.addFlashAttribute("successMessage", "Settings updated successfully.");
+                "Updated settings: sem=" + currentSemester + ", yr=" + academicYear +
+                        ", maxWeeklyAbsences=" + maxWeeklyAbsenceRequests + ", maxMonthlyDays=" + maxMonthlyLeaveDays);
+        redirectAttributes.addFlashAttribute("successMessage", "Institutional system and policy settings updated successfully.");
         return "redirect:/admin/settings";
     }
 

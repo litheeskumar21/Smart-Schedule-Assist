@@ -155,6 +155,15 @@ public class TimetableController {
         User user = getCurrentUser();
         Section section = sectionRepository.findById(sectionId).orElseThrow();
 
+        // Hard constraint safety validation: Never publish a timetable that fails validation
+        List<TimetableEntry> entries = timetableService.getAllEntriesForSection(section);
+        List<String> violations = timetableValidationService.validateHardConstraints(entries, section);
+        if (!violations.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Cannot publish timetable! Hard constraint violation(s) detected: " + String.join(" | ", violations));
+            return "redirect:/admin/timetables/edit/" + sectionId;
+        }
+
         timetableService.publishTimetable(sectionId);
 
         // Notify students in section

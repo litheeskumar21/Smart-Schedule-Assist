@@ -19,6 +19,7 @@
             <div class="page-header">
                 <div class="page-header-left">
                     <h1 class="page-title">Faculty Absence Requests (<span th:text="${requests.size()}">0</span>)</h1>
+                    <p class="text-muted" style="margin-top: 4px;">Review absence requests, policy violations, and auto-calculated substitute proposals.</p>
                 </div>
                 <div class="page-header-actions">
                     <div class="search-wrap">
@@ -43,8 +44,8 @@
                             <th>Faculty Member</th>
                             <th>Absence Date</th>
                             <th>Scope</th>
+                            <th>Policy Status</th>
                             <th>Reason</th>
-                            <th>Suggested Sub</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -58,8 +59,16 @@
                             </td>
                             <td><strong th:text="${r.absenceDate != null ? #temporals.format(r.absenceDate, 'MMM dd, yyyy (EEEE)') : '-'}">Oct 10, 2026</strong></td>
                             <td th:text="${r.absenceType != null and r.absenceType.name() == 'FULL_DAY' ? 'Full Day' : 'Specific Periods'}">Full Day</td>
+                            <td>
+                                <span th:if="${r.policyViolated}" class="badge badge-rejected" style="font-weight: 700; background-color: #ef4444; color: white;" title="Institutional policy limit exceeded - Requires Admin Review">
+                                    ⚠️ POLICY VIOLATION
+                                </span>
+                                <span th:if="${!r.policyViolated}" class="badge badge-approved" style="background-color: #10b981; color: white;">
+                                    ✓ Compliant
+                                </span>
+                                <div th:if="${r.adminOverride}" style="font-size: 11px; color: #f59e0b; margin-top: 2px;">(Admin Override)</div>
+                            </td>
                             <td th:text="${r.reason != null and !r.reason.isEmpty() ? r.reason : '-'}">Medical Leave</td>
-                            <td th:text="${r.suggestedSubstitute != null and r.suggestedSubstitute.user != null ? r.suggestedSubstitute.user.fullName : '-'}">-</td>
                             <td>
                                 <span th:if="${r.status != null and r.status.name() == 'PENDING'}" class="badge badge-pending">Pending Review</span>
                                 <span th:if="${r.status != null and r.status.name() == 'APPROVED'}" class="badge badge-approved">Approved</span>
@@ -68,7 +77,7 @@
                             </td>
                             <td>
                                 <div class="table-actions">
-                                    <a th:href="@{'/admin/absence-requests/' + ${r.id}}" class="btn btn-primary btn-sm">View & Manage →</a>
+                                    <a th:href="@{'/admin/absence-requests/' + ${r.id}}" class="btn btn-primary btn-sm">Review & Resolve →</a>
                                 </div>
                             </td>
                         </tr>
@@ -93,7 +102,5 @@
         });
     }
 </script>
-<script th:src="@{/js/notifications.js}"></script>
-<script th:src="@{/js/mobile.js}"></script>
 </body>
 </html>

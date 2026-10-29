@@ -31,6 +31,16 @@ public class AbsenceAffectedClass {
     @Enumerated(EnumType.STRING)
     private ClassResolution resolution = ClassResolution.PENDING;
 
+    @ManyToOne
+    @JoinColumn
+    private Teacher proposedSubstitute;
+
+    @Column(length = 500)
+    private String proposalReason;
+
+    @Column(length = 50)
+    private String proposalStatus; // "PROPOSED", "UNRESOLVED", "RESOLVED"
+
     public Long getId() {
         return this.id;
     }
@@ -69,5 +79,29 @@ public class AbsenceAffectedClass {
 
     public void setResolution(ClassResolution resolution) {
         this.resolution = resolution;
+    }
+
+    public Teacher getProposedSubstitute() {
+        return this.proposedSubstitute;
+    }
+
+    public void setProposedSubstitute(Teacher proposedSubstitute) {
+        this.proposedSubstitute = proposedSubstitute;
+    }
+
+    public String getProposalReason() {
+        return this.proposalReason;
+    }
+
+    public void setProposalReason(String proposalReason) {
+        this.proposalReason = proposalReason;
+    }
+
+    public String getProposalStatus() {
+        return this.proposalStatus;
+    }
+
+    public void setProposalStatus(String proposalStatus) {
+        this.proposalStatus = proposalStatus;
     }
 }

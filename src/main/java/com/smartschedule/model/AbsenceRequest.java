@@ -52,6 +52,25 @@ public class AbsenceRequest {
     @JoinColumn
     private User reviewedBy;
 
+    @Column(nullable = false)
+    private boolean policyViolated = false;
+
+    @Column(length = 500)
+    private String policyViolationReason;
+
+    @Column(nullable = false)
+    private boolean escalatedToAdmin = false;
+
+    @Column(nullable = false)
+    private boolean adminOverride = false;
+
+    private int weeklyRequestCount = 0;
+
+    private double monthlyLeaveDays = 0.0;
+
+    @Column(columnDefinition = "TEXT")
+    private String aiExplanation;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -151,5 +170,61 @@ public class AbsenceRequest {
 
     public void setReviewedBy(User reviewedBy) {
         this.reviewedBy = reviewedBy;
+    }
+
+    public boolean isPolicyViolated() {
+        return this.policyViolated;
+    }
+
+    public void setPolicyViolated(boolean policyViolated) {
+        this.policyViolated = policyViolated;
+    }
+
+    public String getPolicyViolationReason() {
+        return this.policyViolationReason;
+    }
+
+    public void setPolicyViolationReason(String policyViolationReason) {
+        this.policyViolationReason = policyViolationReason;
+    }
+
+    public boolean isEscalatedToAdmin() {
+        return this.escalatedToAdmin;
+    }
+
+    public void setEscalatedToAdmin(boolean escalatedToAdmin) {
+        this.escalatedToAdmin = escalatedToAdmin;
+    }
+
+    public boolean isAdminOverride() {
+        return this.adminOverride;
+    }
+
+    public void setAdminOverride(boolean adminOverride) {
+        this.adminOverride = adminOverride;
+    }
+
+    public int getWeeklyRequestCount() {
+        return this.weeklyRequestCount;
+    }
+
+    public void setWeeklyRequestCount(int weeklyRequestCount) {
+        this.weeklyRequestCount = weeklyRequestCount;
+    }
+
+    public double getMonthlyLeaveDays() {
+        return this.monthlyLeaveDays;
+    }
+
+    public void setMonthlyLeaveDays(double monthlyLeaveDays) {
+        this.monthlyLeaveDays = monthlyLeaveDays;
+    }
+
+    public String getAiExplanation() {
+        return this.aiExplanation;
+    }
+
+    public void setAiExplanation(String aiExplanation) {
+        this.aiExplanation = aiExplanation;
     }
 }

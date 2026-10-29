@@ -41,6 +41,7 @@ public class TeacherController {
     private final TimetableChangeRequestRepository timetableChangeRequestRepository;
     private final TimetableEntryRepository timetableEntryRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final AbsencePolicyService absencePolicyService;
 
     public TeacherController(TeacherService teacherService,
                              TimetableService timetableService,
@@ -52,7 +53,8 @@ public class TeacherController {
                              TeacherRepository teacherRepository,
                              TimetableChangeRequestRepository timetableChangeRequestRepository,
                              TimetableEntryRepository timetableEntryRepository,
-                             BCryptPasswordEncoder passwordEncoder) {
+                             BCryptPasswordEncoder passwordEncoder,
+                             AbsencePolicyService absencePolicyService) {
         this.teacherService = teacherService;
         this.timetableService = timetableService;
         this.absenceService = absenceService;
@@ -64,6 +66,7 @@ public class TeacherController {
         this.timetableChangeRequestRepository = timetableChangeRequestRepository;
         this.timetableEntryRepository = timetableEntryRepository;
         this.passwordEncoder = passwordEncoder;
+        this.absencePolicyService = absencePolicyService;
     }
 
     private User getCurrentUser() {
@@ -136,10 +139,15 @@ public class TeacherController {
         User user = getCurrentUser();
         Teacher teacher = teacherService.getTeacherByUser(user);
 
+        LocalDate today = LocalDate.now();
         model.addAttribute("teacher", teacher);
         model.addAttribute("absenceRequests", absenceService.getTeacherAbsences(teacher));
         model.addAttribute("allPeriods", timetableService.getClassPeriods());
         model.addAttribute("allTeachers", teacherRepository.findAll());
+        model.addAttribute("weeklyCount", absencePolicyService.getTeacherWeeklyRequestCount(teacher, today));
+        model.addAttribute("weeklyLimit", absencePolicyService.getWeeklyLimit());
+        model.addAttribute("monthlyDays", absencePolicyService.getTeacherMonthlyLeaveDays(teacher, today));
+        model.addAttribute("monthlyLimit", absencePolicyService.getMonthlyLimit());
         model.addAttribute("unreadCount", notificationService.getUnreadCount(user));
 
         return "teacher/absence";
