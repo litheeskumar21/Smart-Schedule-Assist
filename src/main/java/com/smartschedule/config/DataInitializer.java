@@ -197,6 +197,56 @@ public class DataInitializer implements CommandLineRunner {
         createAssignment(dbmsLab, t01, cseB);
         createAssignment(oopLab, t08, cseB);
 
+        // ECE Subjects (2nd Year)
+        Subject ecSignals = createSubject("Signals and Systems", "EC201", SubjectType.THEORY, 4, ece, yr2);
+        Subject ecAnalog = createSubject("Analog Circuits", "EC202", SubjectType.THEORY, 4, ece, yr2);
+        Subject ecDigital = createSubject("Digital Electronics", "EC203", SubjectType.THEORY, 3, ece, yr2);
+        Subject ecEmf = createSubject("Electromagnetic Fields", "EC204", SubjectType.THEORY, 3, ece, yr2);
+        Subject ecMicro = createSubject("Microprocessors & Microcontrollers", "EC205", SubjectType.THEORY, 4, ece, yr2);
+        Subject ecAnalogLab = createSubject("Analog Circuits Lab", "EC206", SubjectType.LAB, 2, ece, yr2);
+        Subject ecDigitalLab = createSubject("Digital Electronics Lab", "EC207", SubjectType.LAB, 2, ece, yr2);
+        Subject ecMicroLab = createSubject("Microprocessors Lab", "EC208", SubjectType.LAB, 2, ece, yr2);
+
+        // Subject Assignments for ECE-A
+        createAssignment(ecSignals, t04, eceA);
+        createAssignment(ecAnalog, t05, eceA);
+        createAssignment(ecDigital, t13, eceA);
+        createAssignment(ecEmf, t03, eceA);
+        createAssignment(ecMicro, t14, eceA);
+        createAssignment(ecAnalogLab, t05, eceA);
+        createAssignment(ecDigitalLab, t13, eceA);
+        createAssignment(ecMicroLab, t14, eceA);
+
+        // Subject Assignments for ECE-B
+        createAssignment(ecSignals, t05, eceB);
+        createAssignment(ecAnalog, t04, eceB);
+        createAssignment(ecDigital, t03, eceB);
+        createAssignment(ecEmf, t13, eceB);
+        createAssignment(ecMicro, t04, eceB);
+        createAssignment(ecAnalogLab, t04, eceB);
+        createAssignment(ecDigitalLab, t03, eceB);
+        createAssignment(ecMicroLab, t05, eceB);
+
+        // EEE Subjects (2nd Year)
+        Subject eeCircuits = createSubject("Electric Circuit Theory", "EE201", SubjectType.THEORY, 4, eee, yr2);
+        Subject eeMachines = createSubject("Electrical Machines - I", "EE202", SubjectType.THEORY, 4, eee, yr2);
+        Subject eeControl = createSubject("Control Systems", "EE203", SubjectType.THEORY, 3, eee, yr2);
+        Subject eePower = createSubject("Power Electronics", "EE204", SubjectType.THEORY, 3, eee, yr2);
+        Subject eeMeasure = createSubject("Measurements & Instrumentation", "EE205", SubjectType.THEORY, 4, eee, yr2);
+        Subject eeCircuitsLab = createSubject("Electric Circuits Lab", "EE206", SubjectType.LAB, 2, eee, yr2);
+        Subject eeMachinesLab = createSubject("Electrical Machines Lab", "EE207", SubjectType.LAB, 2, eee, yr2);
+        Subject eePowerLab = createSubject("Power Electronics Lab", "EE208", SubjectType.LAB, 2, eee, yr2);
+
+        // Subject Assignments for EEE-A
+        createAssignment(eeCircuits, t06, eeeA);
+        createAssignment(eeMachines, t06, eeeA);
+        createAssignment(eeControl, t07, eeeA);
+        createAssignment(eePower, t07, eeeA);
+        createAssignment(eeMeasure, t14, eeeA);
+        createAssignment(eeCircuitsLab, t07, eeeA);
+        createAssignment(eeMachinesLab, t06, eeeA);
+        createAssignment(eePowerLab, t14, eeeA);
+
         // 11. Published Timetable for CSE-A (2nd Year)
         // Mon-Fri schedule covering all 6 class periods + breaks
         List<Period> allP = List.of(p1, b1, p2, b2, p3, p4, lunch, p5, b3, p6);

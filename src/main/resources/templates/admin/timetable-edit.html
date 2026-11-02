@@ -106,7 +106,8 @@
                                 🍱 Lunch Break
                             </td>
 
-                            <td th:if="${period.type.name() == 'CLASS'}" th:each="day : ${T(java.time.DayOfWeek).values()}" th:if="${day.value <= 5}">
+                            <th:block th:if="${period.type != null and period.type.name() == 'CLASS'}">
+                            <td th:each="day : ${T(java.time.DayOfWeek).values()}" th:if="${day.value <= 5}">
                                 <div th:with="matchingEntries=${entries.?[dayOfWeek == #root.day && period.id == #root.period.id]}">
                                     <div th:if="${!matchingEntries.isEmpty() && matchingEntries[0].subject != null}"
                                          class="timetable-cell"
@@ -114,7 +115,8 @@
                                          th:classappend="${matchingEntries[0].locked ? 'cell-locked' : ''}">
                                         <div class="flex-between flex-center">
                                             <div class="cell-subject" th:text="${matchingEntries[0].subject.name}">Data Structures</div>
-                                            <button th:onclick="'toggleLockSlot(' + ${matchingEntries[0].id} + ')'"
+                                            <button th:data-id="${matchingEntries[0].id}"
+                                                    onclick="toggleLockSlot(this.getAttribute('data-id'))"
                                                     style="background: none; border: none; cursor: pointer; font-size: 12px;"
                                                     th:title="${matchingEntries[0].locked ? 'Unlock slot' : 'Lock slot'}">
                                                 <span th:text="${matchingEntries[0].locked ? '🔒' : '🔓'}">🔓</span>
@@ -124,7 +126,13 @@
                                         <div class="cell-room text-muted" th:if="${matchingEntries[0].classroom != null}">📍 <span th:text="${matchingEntries[0].classroom.name}">Room 101</span></div>
                                         <div class="mt-8 table-actions" style="justify-content: center;">
                                             <button class="btn btn-primary btn-sm" style="padding: 2px 6px; font-size: 11px;"
-                                                    th:onclick="'openEditModal(' + ${matchingEntries[0].id} + ', \'' + ${day.name()} + '\', ' + ${period.id} + ', ' + ${matchingEntries[0].subject.id} + ', ' + (${matchingEntries[0].teacher != null ? matchingEntries[0].teacher.id : 'null'}) + ', ' + (${matchingEntries[0].classroom != null ? matchingEntries[0].classroom.id : 'null'}) + ')'">
+                                                    th:data-id="${matchingEntries[0].id}"
+                                                    th:data-day="${day.name()}"
+                                                    th:data-period="${period.id}"
+                                                    th:data-subject="${matchingEntries[0].subject.id}"
+                                                    th:data-teacher="${matchingEntries[0].teacher != null ? matchingEntries[0].teacher.id : ''}"
+                                                    th:data-room="${matchingEntries[0].classroom != null ? matchingEntries[0].classroom.id : ''}"
+                                                    onclick="openEditModal(this.getAttribute('data-id'), this.getAttribute('data-day'), this.getAttribute('data-period'), this.getAttribute('data-subject'), this.getAttribute('data-teacher') || null, this.getAttribute('data-room') || null)">
                                                 Edit
                                             </button>
                                         </div>
@@ -132,12 +140,15 @@
                                     <div th:if="${matchingEntries.isEmpty() || matchingEntries[0].subject == null}" class="cell-free" style="padding: 12px; text-align: center;">
                                         <span class="text-muted" style="font-size: 12px;">FREE</span><br>
                                         <button class="btn btn-primary btn-sm mt-8" style="padding: 2px 6px; font-size: 11px; background-color: #6b7280;"
-                                                th:onclick="'openCreateModal(\'' + ${day.name()} + '\', ' + ${period.id} + ')'">
+                                                th:data-day="${day.name()}"
+                                                th:data-period="${period.id}"
+                                                onclick="openCreateModal(this.getAttribute('data-day'), this.getAttribute('data-period'))">
                                             + Assign
                                         </button>
                                     </div>
                                 </div>
                             </td>
+                            </th:block>
                         </tr>
                         </tbody>
                     </table>

@@ -154,8 +154,6 @@ public class TimetableGeneratorService {
             int needed = totalDemanded - assignedCounts.getOrDefault(subject.getId(), 0);
             if (needed <= 0) continue;
 
-            Classroom suitableRoom = findSuitableRoom(subject, allRooms);
-
             if (subject.getType() == SubjectType.LAB) {
                 // LAB: Schedule in pairs of 2 consecutive periods
                 while (needed >= 2) {
@@ -167,13 +165,18 @@ public class TimetableGeneratorService {
                             Period p1 = classPeriods.get(i);
                             Period p2 = classPeriods.get(i + 1);
 
+                            // Do not split labs across lunch break (Period 6 to Period 8)
+                            if (p1.getPeriodNumber() == 6 && p2.getPeriodNumber() == 8) continue;
+
+                            Classroom suitableLabRoom = findFreeSuitableLabRoom(subject, allRooms, day, p1, p2, section, grid);
+                            if (suitableLabRoom == null) continue;
+
                             if (isSlotFree(grid, day, p1) && isSlotFree(grid, day, p2) &&
                                     isTeacherFree(teacher, day, p1, section) && isTeacherFree(teacher, day, p2, section) &&
-                                    isRoomFree(suitableRoom, day, p1, section) && isRoomFree(suitableRoom, day, p2, section) &&
                                     checkWorkloadLimit(teacher, day, 2, teacherDailyHours, teacherWeeklyHours, maxDailyTeacherPeriods, maxWeeklyTeacherPeriods)) {
 
-                                grid.put(slotKey(day, p1), createEntry(section, day, p1, subject, teacher, suitableRoom));
-                                grid.put(slotKey(day, p2), createEntry(section, day, p2, subject, teacher, suitableRoom));
+                                grid.put(slotKey(day, p1), createEntry(section, day, p1, subject, teacher, suitableLabRoom));
+                                grid.put(slotKey(day, p2), createEntry(section, day, p2, subject, teacher, suitableLabRoom));
                                 subjectsPerDay.get(day).add(subject.getId());
 
                                 recordTeacherHours(teacher, day, 2, teacherDailyHours, teacherWeeklyHours);
@@ -202,7 +205,10 @@ public class TimetableGeneratorService {
                     for (Period period : classPeriods) {
                         if (!isSlotFree(grid, day, period)) continue;
                         if (!isTeacherFree(teacher, day, period, section)) continue;
-                        if (!isRoomFree(suitableRoom, day, period, section)) continue;
+
+                        Classroom availableRoom = findFreeSuitableTheoryRoom(allRooms, day, period, section, grid);
+                        if (availableRoom == null) continue;
+
                         if (!checkWorkloadLimit(teacher, day, 1, teacherDailyHours, teacherWeeklyHours, maxDailyTeacherPeriods, maxWeeklyTeacherPeriods)) continue;
 
                         int score = 0;
@@ -226,14 +232,14 @@ public class TimetableGeneratorService {
 
                         if (score > bestScore) {
                             bestScore = score;
-                            bestSlot = new SlotChoice(day, period);
+                            bestSlot = new SlotChoice(day, period, availableRoom);
                         }
                     }
                 }
 
                 if (bestSlot != null) {
                     grid.put(slotKey(bestSlot.day, bestSlot.period),
-                            createEntry(section, bestSlot.day, bestSlot.period, subject, teacher, suitableRoom));
+                            createEntry(section, bestSlot.day, bestSlot.period, subject, teacher, bestSlot.room));
                     subjectsPerDay.get(bestSlot.day).add(subject.getId());
                     recordTeacherHours(teacher, bestSlot.day, 1, teacherDailyHours, teacherWeeklyHours);
                     needed--;
@@ -390,6 +396,47 @@ public class TimetableGeneratorService {
         weeklyMap.put(teacher.getId(), weeklyMap.getOrDefault(teacher.getId(), 0) + hours);
     }
 
+    private Classroom findFreeSuitableLabRoom(Subject subject, List<Classroom> allRooms,
+                                              DayOfWeek day, Period p1, Period p2,
+                                              Section section, Map<String, TimetableEntry> grid) {
+        for (Classroom room : allRooms) {
+            if (room.getRoomType() == RoomType.CLASSROOM) continue;
+            if (!isRoomFree(room, day, p1, section) || !isRoomFree(room, day, p2, section)) continue;
+
+            // Check if room is already taken in current section grid at p1 or p2
+            TimetableEntry e1 = grid.get(slotKey(day, p1));
+            if (e1 != null && e1.getClassroom() != null && e1.getClassroom().getId().equals(room.getId())) continue;
+            TimetableEntry e2 = grid.get(slotKey(day, p2));
+            if (e2 != null && e2.getClassroom() != null && e2.getClassroom().getId().equals(room.getId())) continue;
+
+            return room;
+        }
+        return null;
+    }
+
+    private Classroom findFreeSuitableTheoryRoom(List<Classroom> allRooms,
+                                                 DayOfWeek day, Period period,
+                                                 Section section, Map<String, TimetableEntry> grid) {
+        for (Classroom room : allRooms) {
+            if (room.getRoomType() != RoomType.CLASSROOM) continue;
+            if (!isRoomFree(room, day, period, section)) continue;
+
+            // Check if room is already taken in current section grid
+            TimetableEntry existing = grid.get(slotKey(day, period));
+            if (existing != null && existing.getClassroom() != null && existing.getClassroom().getId().equals(room.getId())) continue;
+
+            return room;
+        }
+        // Fallback: any free room if no standard classroom is free
+        for (Classroom room : allRooms) {
+            if (!isRoomFree(room, day, period, section)) continue;
+            TimetableEntry existing = grid.get(slotKey(day, period));
+            if (existing != null && existing.getClassroom() != null && existing.getClassroom().getId().equals(room.getId())) continue;
+            return room;
+        }
+        return null;
+    }
+
     private Classroom findSuitableRoom(Subject subject, List<Classroom> allRooms) {
         if (subject.getType() == SubjectType.LAB) {
             return allRooms.stream()
@@ -445,10 +492,12 @@ public class TimetableGeneratorService {
     private static class SlotChoice {
         final DayOfWeek day;
         final Period period;
+        final Classroom room;
 
-        SlotChoice(DayOfWeek day, Period period) {
+        SlotChoice(DayOfWeek day, Period period, Classroom room) {
             this.day = day;
             this.period = period;
+            this.room = room;
         }
     }
 }

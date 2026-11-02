@@ -80,7 +80,8 @@
                         </td>
 
                         <!-- Academic Class Days -->
-                        <td th:if="${period.type.name() == 'CLASS'}" th:each="day : ${T(java.time.DayOfWeek).values()}" th:if="${day.value <= 5}">
+                        <th:block th:if="${period.type != null and period.type.name() == 'CLASS'}">
+                        <td th:each="day : ${T(java.time.DayOfWeek).values()}" th:if="${day.value <= 5}">
                             <div th:with="dayList=${weeklyTimetable.get(day)}, matchingEntries=${dayList != null ? dayList.?[period.id == #root.period.id] : null}">
                                 <div th:if="${matchingEntries != null && !matchingEntries.isEmpty() && matchingEntries[0].subject != null}"
                                      class="timetable-cell"
@@ -101,6 +102,7 @@
                                 </div>
                             </div>
                         </td>
+                        </th:block>
                     </tr>
                     </tbody>
                 </table>
