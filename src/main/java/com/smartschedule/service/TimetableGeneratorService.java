@@ -81,17 +81,35 @@ public class TimetableGeneratorService {
         int maxDailyTeacherPeriods = getMaxDailyPeriods();
         int maxWeeklyTeacherPeriods = getMaxWeeklyPeriods();
 
-        // 3. Preserve locked slots
+        // 3. Map existing slots for this section to avoid duplicate rows and update in-place
         List<TimetableEntry> existingEntries = timetableEntryRepository.findBySection(section);
-        Map<String, TimetableEntry> lockedSlots = new HashMap<>();
+        Map<String, TimetableEntry> slotToExistingEntry = new HashMap<>();
+        List<TimetableEntry> duplicatesToDelete = new ArrayList<>();
+
         for (TimetableEntry e : existingEntries) {
+            if (e.getDayOfWeek() == null || e.getPeriod() == null) continue;
+            String key = slotKey(e.getDayOfWeek(), e.getPeriod());
+            if (!slotToExistingEntry.containsKey(key)) {
+                slotToExistingEntry.put(key, e);
+            } else {
+                duplicatesToDelete.add(e);
+            }
+        }
+        if (!duplicatesToDelete.isEmpty()) {
+            try {
+                timetableEntryRepository.deleteAll(duplicatesToDelete);
+            } catch (Exception ex) {
+                log.warn("Could not delete duplicate entries directly: {}", ex.getMessage());
+            }
+        }
+
+        // Preserve locked slots
+        Map<String, TimetableEntry> lockedSlots = new HashMap<>();
+        for (TimetableEntry e : slotToExistingEntry.values()) {
             if (e.isLocked()) {
                 lockedSlots.put(slotKey(e.getDayOfWeek(), e.getPeriod()), e);
             }
         }
-
-        // Delete non-locked draft entries before regenerating
-        timetableEntryRepository.deleteBySectionAndPublishedFalseAndLockedFalse(section);
 
         // 4. Build schedule grid: slotKey -> TimetableEntry
         Map<String, TimetableEntry> grid = new HashMap<>();
@@ -133,8 +151,9 @@ public class TimetableGeneratorService {
             }
         }
 
-        // 5. Prioritize LAB subjects (require consecutive pairs), then higher periodsPerWeek
+        // 5. Prioritize LAB subjects, randomize order among equal periods to generate varied optimal schedules
         List<SubjectAssignment> sortedAssignments = new ArrayList<>(assignments);
+        Collections.shuffle(sortedAssignments);
         sortedAssignments.sort((a, b) -> {
             boolean aLab = a.getSubject().getType() == SubjectType.LAB;
             boolean bLab = b.getSubject().getType() == SubjectType.LAB;
@@ -154,11 +173,14 @@ public class TimetableGeneratorService {
             int needed = totalDemanded - assignedCounts.getOrDefault(subject.getId(), 0);
             if (needed <= 0) continue;
 
+            List<DayOfWeek> searchDays = new ArrayList<>(WORKING_DAYS);
+            Collections.shuffle(searchDays);
+
             if (subject.getType() == SubjectType.LAB) {
                 // LAB: Schedule in pairs of 2 consecutive periods
                 while (needed >= 2) {
                     boolean placed = false;
-                    for (DayOfWeek day : WORKING_DAYS) {
+                    for (DayOfWeek day : searchDays) {
                         if (subjectsPerDay.get(day).contains(subject.getId())) continue;
 
                         for (int i = 0; i < classPeriods.size() - 1; i++) {
@@ -175,8 +197,8 @@ public class TimetableGeneratorService {
                                     isTeacherFree(teacher, day, p1, section) && isTeacherFree(teacher, day, p2, section) &&
                                     checkWorkloadLimit(teacher, day, 2, teacherDailyHours, teacherWeeklyHours, maxDailyTeacherPeriods, maxWeeklyTeacherPeriods)) {
 
-                                grid.put(slotKey(day, p1), createEntry(section, day, p1, subject, teacher, suitableLabRoom));
-                                grid.put(slotKey(day, p2), createEntry(section, day, p2, subject, teacher, suitableLabRoom));
+                                grid.put(slotKey(day, p1), prepareEntry(section, day, p1, subject, teacher, suitableLabRoom, slotToExistingEntry));
+                                grid.put(slotKey(day, p2), prepareEntry(section, day, p2, subject, teacher, suitableLabRoom, slotToExistingEntry));
                                 subjectsPerDay.get(day).add(subject.getId());
 
                                 recordTeacherHours(teacher, day, 2, teacherDailyHours, teacherWeeklyHours);
@@ -201,7 +223,7 @@ public class TimetableGeneratorService {
                 SlotChoice bestSlot = null;
                 int bestScore = Integer.MIN_VALUE;
 
-                for (DayOfWeek day : WORKING_DAYS) {
+                for (DayOfWeek day : searchDays) {
                     for (Period period : classPeriods) {
                         if (!isSlotFree(grid, day, period)) continue;
                         if (!isTeacherFree(teacher, day, period, section)) continue;
@@ -211,7 +233,7 @@ public class TimetableGeneratorService {
 
                         if (!checkWorkloadLimit(teacher, day, 1, teacherDailyHours, teacherWeeklyHours, maxDailyTeacherPeriods, maxWeeklyTeacherPeriods)) continue;
 
-                        int score = 0;
+                        int score = java.util.concurrent.ThreadLocalRandom.current().nextInt(0, 4);
                         // Soft constraint: Prefer days where subject is not yet taught
                         if (!subjectsPerDay.get(day).contains(subject.getId())) {
                             score += 15;
@@ -239,7 +261,7 @@ public class TimetableGeneratorService {
 
                 if (bestSlot != null) {
                     grid.put(slotKey(bestSlot.day, bestSlot.period),
-                            createEntry(section, bestSlot.day, bestSlot.period, subject, teacher, bestSlot.room));
+                            prepareEntry(section, bestSlot.day, bestSlot.period, subject, teacher, bestSlot.room, slotToExistingEntry));
                     subjectsPerDay.get(bestSlot.day).add(subject.getId());
                     recordTeacherHours(teacher, bestSlot.day, 1, teacherDailyHours, teacherWeeklyHours);
                     needed--;
@@ -257,16 +279,7 @@ public class TimetableGeneratorService {
             for (Period period : classPeriods) {
                 String key = slotKey(day, period);
                 if (!grid.containsKey(key)) {
-                    TimetableEntry freeEntry = new TimetableEntry();
-                    freeEntry.setSection(section);
-                    freeEntry.setDayOfWeek(day);
-                    freeEntry.setPeriod(period);
-                    freeEntry.setStatus(EntryStatus.ACTIVE);
-                    freeEntry.setSubject(null);
-                    freeEntry.setTeacher(null);
-                    freeEntry.setClassroom(null);
-                    freeEntry.setPublished(false);
-                    grid.put(key, freeEntry);
+                    grid.put(key, prepareEntry(section, day, period, null, null, null, slotToExistingEntry));
                 }
             }
         }
@@ -277,13 +290,7 @@ public class TimetableGeneratorService {
                 if (period.getType() != PeriodType.CLASS) {
                     String key = slotKey(day, period);
                     if (!grid.containsKey(key)) {
-                        TimetableEntry nonClassEntry = new TimetableEntry();
-                        nonClassEntry.setSection(section);
-                        nonClassEntry.setDayOfWeek(day);
-                        nonClassEntry.setPeriod(period);
-                        nonClassEntry.setStatus(EntryStatus.ACTIVE);
-                        nonClassEntry.setPublished(false);
-                        grid.put(key, nonClassEntry);
+                        grid.put(key, prepareEntry(section, day, period, null, null, null, slotToExistingEntry));
                     }
                 }
             }
@@ -454,12 +461,17 @@ public class TimetableGeneratorService {
         }
     }
 
-    private TimetableEntry createEntry(Section section, DayOfWeek day, Period period,
-                                       Subject subject, Teacher teacher, Classroom room) {
-        TimetableEntry entry = new TimetableEntry();
-        entry.setSection(section);
-        entry.setDayOfWeek(day);
-        entry.setPeriod(period);
+    private TimetableEntry prepareEntry(Section section, DayOfWeek day, Period period,
+                                        Subject subject, Teacher teacher, Classroom room,
+                                        Map<String, TimetableEntry> slotToExistingEntry) {
+        String key = slotKey(day, period);
+        TimetableEntry entry = slotToExistingEntry != null ? slotToExistingEntry.get(key) : null;
+        if (entry == null) {
+            entry = new TimetableEntry();
+            entry.setSection(section);
+            entry.setDayOfWeek(day);
+            entry.setPeriod(period);
+        }
         entry.setSubject(subject);
         entry.setTeacher(teacher);
         entry.setClassroom(room);
