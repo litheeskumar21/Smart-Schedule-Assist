@@ -29,10 +29,17 @@
 
 [data-theme="dark"] {
   --bg: #0b1120; --surface: #111827; --surface-elevated: #172033;
-  --surface-2: #1f2937; --text: #f9fafb; --text-muted: #9ca3af;
-  --text-placeholder: #6b7280; --border: #1f2937; --border-subtle: #1a2537;
-  --sidebar-bg: #0b1120; --sidebar-text: #6b7280; --sidebar-text-active: #f9fafb;
-  --sidebar-hover: rgba(255,255,255,0.04); --overlay: rgba(0,0,0,0.65);
+  --surface-2: #1e293b; --text: #f9fafb; --text-muted: #94a3b8;
+  --text-placeholder: #64748b; --border: #334155; --border-subtle: #1e293b;
+  --sidebar-bg: #0b1120; --sidebar-text: #94a3b8; --sidebar-text-active: #f9fafb;
+  --sidebar-hover: rgba(255,255,255,0.06); --overlay: rgba(0,0,0,0.7);
+
+  /* Status and badge colors in dark mode with high-contrast text and soft luminous backgrounds */
+  --status-success: #34d399; --status-success-bg: rgba(16, 185, 129, 0.18);
+  --status-warning: #fbbf24; --status-warning-bg: rgba(245, 158, 11, 0.18);
+  --status-error: #f87171; --status-error-bg: rgba(239, 68, 68, 0.18);
+  --status-info: #60a5fa; --status-info-bg: rgba(59, 130, 246, 0.18);
+  --status-cancelled: #94a3b8; --status-cancelled-bg: rgba(148, 163, 184, 0.15);
 }
 
 [data-role="student"] {
@@ -438,20 +445,66 @@ button { font-family: inherit; }
 .form-error { font-size: 12px; color: var(--status-error); margin-top: 5px; display: flex; align-items: center; gap: 5px; }
 .form-hint { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
 
-.floating-group { position: relative; margin-bottom: 20px; }
-.floating-input {
-  width: 100%; padding: 18px 14px 6px; border: 1.5px solid var(--border);
+.floating-group,
+.form-floating { position: relative; margin-bottom: 20px; }
+.floating-input,
+.form-floating .form-control {
+  width: 100%; padding: 22px 14px 8px; border: 1.5px solid var(--border);
   border-radius: var(--radius-input); font-size: 14px; font-family: inherit;
   background: var(--surface); color: var(--text);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-base);
 }
-.floating-input:focus { outline: none; border-color: var(--role-primary); box-shadow: 0 0 0 3px var(--role-primary-soft); }
-.floating-label { position: absolute; left: 14px; top: 13px; font-size: 14px; color: var(--text-muted); pointer-events: none; transition: all var(--transition-fast); transform-origin: left top; }
-.floating-input:focus ~ .floating-label, .floating-input:not(:placeholder-shown) ~ .floating-label { transform: translateY(-7px) scale(0.8); color: var(--role-primary); font-weight: 500; }
+.floating-input:focus,
+.form-floating .form-control:focus {
+  outline: none; border-color: var(--role-primary); box-shadow: 0 0 0 3px var(--role-primary-soft);
+}
+.floating-label,
+.form-floating label {
+  position: absolute; left: 14px; top: 16px; font-size: 14px; color: var(--text-muted);
+  pointer-events: none; transition: transform var(--transition-fast), font-size var(--transition-fast), color var(--transition-fast), top var(--transition-fast);
+  transform-origin: left top;
+}
+.floating-input:focus ~ .floating-label,
+.floating-input:not(:placeholder-shown) ~ .floating-label,
+.form-floating .form-control:focus ~ label,
+.form-floating .form-control:not(:placeholder-shown) ~ label,
+.form-floating .form-control:-webkit-autofill ~ label,
+.form-floating.is-active label {
+  top: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--role-primary);
+}
+.form-floating .form-control:not(:focus):not(:placeholder-shown) ~ label,
+.form-floating.is-active:not(:focus-within) label {
+  color: var(--text-muted);
+}
 .password-wrap { position: relative; }
 .password-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 4px; display: flex; align-items: center; transition: color var(--transition-fast); }
 .password-toggle:hover { color: var(--text); }
 .password-toggle svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 1.75; fill: none; }
+
+/* Info Cards (Profile, Metric Details) */
+.info-card {
+  padding: 16px;
+  border-radius: var(--radius-card);
+  background-color: var(--surface-2);
+  border: 1px solid var(--border);
+  transition: background var(--transition-base), border-color var(--transition-base);
+}
+.info-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.info-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
 
 .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: var(--radius-badge); font-size: 11px; font-weight: 600; letter-spacing: 0.02em; white-space: nowrap; text-transform: uppercase; }
 .badge-pending { background: var(--status-warning-bg); color: var(--status-warning); }

@@ -9,8 +9,8 @@
 </head>
 <body>
 <div class="sidebar-overlay"></div>
-<aside class="sidebar" th:replace="~{fragments/sidebar :: sidebar('profile')}"></aside>
 <div class="app-layout">
+    <aside class="sidebar" th:replace="~{fragments/sidebar :: sidebar('profile')}"></aside>
     <main class="main-content">
         <header class="header" th:replace="~{fragments/header :: header('Student Profile')}"></header>
         <div class="content-wrapper">
@@ -20,32 +20,32 @@
 
         <div class="card profile-card mx-auto" style="max-width: 700px; margin:0 auto;">
             <div class="profile-header text-center mb-24" style="text-align:center; margin-bottom:24px;">
-                <div class="avatar-circle mx-auto mb-16" style="width: 80px; height: 80px; background-color: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 600; margin:0 auto 16px auto;">
+                <div class="avatar-circle mx-auto mb-16" style="width: 80px; height: 80px; background-color: var(--role-primary, var(--primary)); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 600; margin:0 auto 16px auto;">
                     <span th:text="${#strings.substring(student.user.fullName, 0, 1)}">S</span>
                 </div>
-                <h2 style="margin:0;" th:text="${student.user.fullName}">Name</h2>
+                <h2 style="margin:0; color: var(--text);" th:text="${student.user.fullName}">Name</h2>
                 <p class="text-muted mt-4" style="margin-top:4px;" th:text="${student.studentId}">ID</p>
             </div>
             
             <div class="grid grid-2 gap-16 mb-24" style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px;">
-                <div class="info-card p-16 rounded" style="padding:16px; border-radius:8px; background-color: #f8f9fa;">
-                    <div class="text-muted text-sm mb-4" style="font-size:12px; margin-bottom:4px;">Email</div>
-                    <div style="font-weight:600;" th:text="${student.user.email != null ? student.user.email : 'N/A'}">Email</div>
+                <div class="info-card">
+                    <div class="info-label">Email</div>
+                    <div class="info-value" th:text="${student.user.email != null ? student.user.email : 'N/A'}">Email</div>
                 </div>
-                <div class="info-card p-16 rounded" style="padding:16px; border-radius:8px; background-color: #f8f9fa;">
-                    <div class="text-muted text-sm mb-4" style="font-size:12px; margin-bottom:4px;">Department</div>
-                    <div style="font-weight:600;" th:text="${student.department != null ? student.department.name : 'N/A'}">Dept</div>
+                <div class="info-card">
+                    <div class="info-label">Department</div>
+                    <div class="info-value" th:text="${student.department != null ? student.department.name : 'N/A'}">Dept</div>
                 </div>
-                <div class="info-card p-16 rounded" style="padding:16px; border-radius:8px; background-color: #f8f9fa;">
-                    <div class="text-muted text-sm mb-4" style="font-size:12px; margin-bottom:4px;">Year & Section</div>
-                    <div style="font-weight:600;">
+                <div class="info-card">
+                    <div class="info-label">Year & Section</div>
+                    <div class="info-value">
                         <span th:text="${student.academicYear != null ? student.academicYear.label : 'N/A'}">Year</span> - 
                         <span th:text="${student.section != null ? student.section.displayName : 'N/A'}">Section</span>
                     </div>
                 </div>
-                <div class="info-card p-16 rounded" style="padding:16px; border-radius:8px; background-color: #f8f9fa;">
-                    <div class="text-muted text-sm mb-4" style="font-size:12px; margin-bottom:4px;">Semester</div>
-                    <div style="font-weight:600;" th:text="${student.semester}">Sem</div>
+                <div class="info-card">
+                    <div class="info-label">Semester</div>
+                    <div class="info-value" th:text="${student.semester}">Sem</div>
                 </div>
             </div>
 

@@ -76,15 +76,15 @@
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             <input type="hidden" name="role" id="selectedRoleInput" value="student"/>
             
-            <div class="form-floating" style="position: relative; margin-bottom: 16px;">
-                <input type="text" name="username" class="form-control" id="floatingUsername" required autofocus placeholder=" " style="width: 100%; padding: 24px 16px 8px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 15px; outline: none; transition: border-color 0.2s; background: var(--surface); color: var(--text);">
-                <label for="floatingUsername" id="floatingUsernameLabel" style="position: absolute; left: 16px; top: 16px; font-size: 14px; color: var(--text-muted); pointer-events: none; transition: 0.2s;">Student ID / Username</label>
+            <div class="form-floating" style="margin-bottom: 16px;">
+                <input type="text" name="username" class="form-control" id="floatingUsername" required autofocus placeholder=" ">
+                <label for="floatingUsername" id="floatingUsernameLabel">Student ID / Username</label>
             </div>
             
-            <div class="form-floating password-wrapper" style="position: relative; margin-bottom: 16px;">
-                <input type="password" name="password" class="form-control" id="floatingPassword" required placeholder=" " style="width: 100%; padding: 24px 48px 8px 16px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 15px; outline: none; transition: border-color 0.2s; background: var(--surface); color: var(--text);">
-                <label for="floatingPassword" style="position: absolute; left: 16px; top: 16px; font-size: 14px; color: var(--text-muted); pointer-events: none; transition: 0.2s;">Password</label>
-                <button type="button" id="passwordToggleBtn" onclick="togglePassword()" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 4px; color: var(--text-muted); display: flex; align-items: center; transition: color 0.2s;" title="Show/hide password">
+            <div class="form-floating password-wrapper" style="margin-bottom: 16px;">
+                <input type="password" name="password" class="form-control" id="floatingPassword" required placeholder=" " style="padding-right: 48px;">
+                <label for="floatingPassword">Password</label>
+                <button type="button" id="passwordToggleBtn" onclick="togglePassword()" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 4px; color: var(--text-muted); display: flex; align-items: center; transition: color 0.2s; z-index: 2;" title="Show/hide password">
                     <!-- eye-off: shown when password is hidden (default) -->
                     <svg id="iconEyeOff" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
@@ -195,22 +195,31 @@
             selectRole(savedRole, false);
         });
         
-        // Floating label adjustment
-        document.querySelectorAll('.form-control').forEach(input => {
-            input.addEventListener('focus', () => {
-                input.nextElementSibling.style.top = '6px';
-                input.nextElementSibling.style.fontSize = '11px';
-            });
-            input.addEventListener('blur', () => {
-                if (!input.value) {
-                    input.nextElementSibling.style.top = '16px';
-                    input.nextElementSibling.style.fontSize = '14px';
-                }
-            });
-            if (input.value) {
-                input.nextElementSibling.style.top = '6px';
-                input.nextElementSibling.style.fontSize = '11px';
+        // Floating label adjustment & autofill detection
+        function updateFloatingState(input) {
+            const container = input.closest('.form-floating');
+            if (!container) return;
+            const hasVal = Boolean(input.value && input.value.trim().length > 0);
+            const isFocused = (document.activeElement === input);
+            if (hasVal || isFocused) {
+                container.classList.add('is-active');
+            } else {
+                container.classList.remove('is-active');
             }
+        }
+
+        document.querySelectorAll('.form-floating .form-control').forEach(input => {
+            ['focus', 'blur', 'input', 'change', 'keyup'].forEach(ev => {
+                input.addEventListener(ev, () => updateFloatingState(input));
+            });
+            updateFloatingState(input);
+        });
+
+        // Periodic checks to catch browser autofill or delayed autofocus
+        [50, 150, 300, 600, 1000].forEach(delay => {
+            setTimeout(() => {
+                document.querySelectorAll('.form-floating .form-control').forEach(updateFloatingState);
+            }, delay);
         });
     </script>
 </body>
